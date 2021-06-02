@@ -1,0 +1,13 @@
+LICENSE
+MANIFEST.in
+setup.py
+mail_process_worker/__init__.py
+mail_process_worker/run.py
+mail_process_worker/setting.py
+mail_process_worker.egg-info/PKG-INFO
+mail_process_worker.egg-info/SOURCES.txt
+mail_process_worker.egg-info/dependency_links.txt
+mail_process_worker.egg-info/not-zip-safe
+mail_process_worker.egg-info/requires.txt
+mail_process_worker.egg-info/top_level.txt
+tests/__init__.py

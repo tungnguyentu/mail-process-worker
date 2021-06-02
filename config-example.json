@@ -1,0 +1,11 @@
+{
+	"KAFKA_CONSUMER":{
+		"KAFKA_BROKER":[],
+		"KAFKA_TOPIC": ["topic-1", "topic-2"],
+		"KAFKA_CONSUMER_GROUP": "group_id"
+	},
+	"KAFKA_PRODUCER":{
+		"KAFKA_BROKER": [],
+		"KAFKA_TOPIC": "topic"
+	}
+}
