@@ -21,7 +21,7 @@ def get_current_timestamp():
     return timestamp
 
 
-def set_event_priority(data: dict):
+def set_priority(data: dict):
     MESSAGES.append(data)
     logger.info(f"set priority for {data['event']}")
     event_priority = {
@@ -77,15 +77,8 @@ def custom_event(event_name: str, data: dict):
                     "partition": data["partition"],
                 }
             )
-            set_event_priority(NEW_EVENT[user])
+            set_priority(NEW_EVENT[user])
         return None
-
-
-def reorder_event(user: str):
-    logger.info(f"reorder")
-    events = USER_EVENTS[user]
-    events.sort(key=lambda x: x[0])
-    return events
 
 
 def handle_event(event):
@@ -106,8 +99,8 @@ def handle_event(event):
         return
 
     logger.info(f"New event ==> {data['event']}")
-    if data["event"] == "MessageAppend" and data["user"] in data.get("from"):
-        set_event_priority(data)
+    if data["event"] == "MessageAppend" and data["user"] in data.get("from", ""):
+        set_priority(data)
         return
     if data["event"] in ["MessageAppend", "MessageExpunge"]:
         try:
@@ -115,7 +108,7 @@ def handle_event(event):
             return
         except Exception:
             return
-    return set_event_priority(data)
+    return set_priority(data)
 
 
 def re_read(data, consumer):

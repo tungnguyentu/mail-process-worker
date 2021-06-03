@@ -32,7 +32,7 @@ class TestPriority(unittest.TestCase):
             )
 
         for input_data, expect in cases:
-            handle_event.set_event_priority(input_data)
+            handle_event.set_priority(input_data)
             msg = self.MESSAGE_FMT.format(
                 input_data, expect, handle_event.USER_EVENTS
             )
@@ -47,7 +47,7 @@ class TestPriority(unittest.TestCase):
             {"user": "user_A", "event": "MessageAppend"},
         ]
         for input_data in cases:
-            handle_event.set_event_priority(input_data)
+            handle_event.set_priority(input_data)
         expect = {
             "user_A": [
                 (1, {"user": "user_A", "event": "MailboxCreate"}),
