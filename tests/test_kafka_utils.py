@@ -2,11 +2,12 @@ from os import path
 from mail_process_worker.logic.kafka_utils import (
     get_topic_partition,
     get_offsets,
+    get_offset_and_timestamp,
 )
 import logging
 from kafka.structs import TopicPartition, OffsetAndTimestamp
 from tests.base import TestBase
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 
 logging.disable(logging.CRITICAL)
 
@@ -29,36 +30,50 @@ class TestTopicPartition(TestBase):
 
     def test_get_event_offsets_with_offset(self):
         consumer = MagicMock()
-        data ={
+        data = {
             "offset_start": 1,
             "offset_end": 10,
         }
         expect = 1, 10
         output = get_offsets(data, consumer)
-        msg = self.MESSAGE_FMT.format(
-            data, expect, output
-        )
+        msg = self.MESSAGE_FMT.format(data, expect, output)
         self.assertEqual(output, expect, msg)
-    
+
     @patch("mail_process_worker.logic.kafka_utils.get_offset_and_timestamp")
-    @patch('mail_process_worker.logic.handle_kafka_event.get_topic_partition')
-    def test_get_event_offsets_with_timestamp(self, mock_topic_partition, mock_offset_and_timestamp):
+    @patch("mail_process_worker.logic.handle_kafka_event.get_topic_partition")
+    def test_get_event_offsets_with_timestamp(
+        self, mock_topic_partition, mock_offset_and_timestamp
+    ):
         data = {
-            "partition": '1',
+            "partition": "1",
             "topic": "topic-1",
             "timestamp_start": "1234567",
             "timestamp_end": "7654321",
         }
         consumer = MagicMock()
         mock_topic_partition.return_value = TopicPartition("topic-1", 1)
-        mock_offset_and_timestamp.return_value = OffsetAndTimestamp(offset=1234567, timestamp=0), OffsetAndTimestamp(offset=7654321, timestamp=0)
-        expect = 1234567, 7654321
+        mock_offset_and_timestamp.return_value = OffsetAndTimestamp(
+            offset=1, timestamp=0
+        ), OffsetAndTimestamp(offset=10, timestamp=0)
+        expect = 1, 10
         output = get_offsets(data, consumer)
-        msg = self.MESSAGE_FMT.format(
-            data, expect, output
-        )
+        msg = self.MESSAGE_FMT.format(data, expect, output)
         self.assertEqual(output, expect, msg)
-        
 
-    def test_send_to_kafka(self):
-        pass
+    def test_get_offset_and_timestamp(self):
+        tp = TopicPartition("topic-1", 1)
+        start = OffsetAndTimestamp(offset=1, timestamp=0)
+        end = OffsetAndTimestamp(offset=10, timestamp=0)
+        cases = {None: None, start: None, None: end, start: end}
+        for key, value in cases.items():
+            consumer = MagicMock()
+            consumer.offsets_for_times.side_effect = [{tp: key}, {tp: value}]
+            output = get_offset_and_timestamp(tp, consumer, 123, 456)
+            if key is None or value is None:
+                expect = None
+            else:
+                expect = start, end
+            msg = self.MESSAGE_FMT.format(
+                [{tp: key}, {tp: value}], expect, output
+            )
+            self.assertEqual(output, expect, msg)

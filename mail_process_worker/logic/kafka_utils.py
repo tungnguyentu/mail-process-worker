@@ -53,10 +53,12 @@ def send_to_kafka(consumer: KafkaConsumer, user_event: dict):
                 value=event[1],
             )
             producer.flush()
-            tp = TopicPartition(event[1].get("topic"),
-                                event[1].get("partition"))
+            tp = TopicPartition(
+                event[1].get("topic"), event[1].get("partition")
+            )
             consumer.commit(
-                {tp: OffsetAndMetadata(event[1].get("offset") + 1, None)})
+                {tp: OffsetAndMetadata(event[1].get("offset") + 1, None)}
+            )
             logger.info(f"Done | {user=}")
 
 
@@ -66,16 +68,18 @@ def get_topic_partition(data):
     tp = TopicPartition(topic, partition)
     return tp
 
+
 def get_offset_and_timestamp(tp, consumer, timestamp_start, timestamp_end):
     offset_and_timestamp_start = consumer.offsets_for_times(
-            {tp: int(timestamp_start)})
+        {tp: int(timestamp_start)}
+    )
     offset_and_timestamp_end = consumer.offsets_for_times(
-            {tp: int(timestamp_end)})
+        {tp: int(timestamp_end)}
+    )
 
     offset_and_timestamp_start = list(offset_and_timestamp_start.values())[0]
     offset_and_timestamp_end = list(offset_and_timestamp_end.values())[0]
-    if (offset_and_timestamp_start is None
-            or offset_and_timestamp_end is None):
+    if offset_and_timestamp_start is None or offset_and_timestamp_end is None:
         logger.info(f"offset could not found")
         return None
     return offset_and_timestamp_start, offset_and_timestamp_end
@@ -92,9 +96,11 @@ def get_offsets(data, consumer):
         timestamp_start = data.get("timestamp_start", None)
         timestamp_end = data.get("timestamp_end", None)
 
-        offset_and_timestamp_start, offset_and_timestamp_end = get_offset_and_timestamp(tp, consumer, timestamp_start, timestamp_end)
+        offset_timestamp_start, offset_timestamp_end = get_offset_and_timestamp(
+            tp, consumer, timestamp_start, timestamp_end
+        )
 
-        offset_start = offset_and_timestamp_start[0]
-        offset_end = offset_and_timestamp_end[0]
+        offset_start = offset_timestamp_start[0]
+        offset_end = offset_timestamp_end[0]
 
     return offset_start, offset_end

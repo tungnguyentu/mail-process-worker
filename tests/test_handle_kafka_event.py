@@ -132,6 +132,7 @@ class TestCustomEvent(TestBase):
 
     @patch("mail_process_worker.logic.handle_kafka_event.set_priority")
     def test_handle_event(self, mock_priority):
+
         cases = []
         events = [
             "MessageNew",
@@ -144,21 +145,13 @@ class TestCustomEvent(TestBase):
             "MailboxDelete",
         ]
         for event in events:
-            cases.append(
-                (
-                    {
-                        "topic": "topic-1",
-                        "partition": "2",
-                        "offset": 123,
-                        "value": {
-                            "event": event,
-                            "from": "user_A",
-                            "user": "user_A",
-                        },
-                    },
-                    mock_priority(),
-                )
+            consumer_record = MagicMock(
+                topic="topic-1",
+                partition="2",
+                offset=123,
+                value={"event": event, "from": "user_A", "user": "user_A"},
             )
+            cases.append((consumer_record, mock_priority()))
         self._test_all(kafka_event.handle_event, cases)
 
     def test_handle_with_special_event(self):
@@ -171,27 +164,11 @@ class TestCustomEvent(TestBase):
             "MessageExpunge",
         ]
         for event in events:
-            cases.append(
-                (
-                    {
-                        "topic": "topic-1",
-                        "partition": "2",
-                        "offset": 123,
-                        "value": {
-                            "event": event,
-                            "from": "",
-                            "user": "user_A",
-                        },
-                    },
-                    None,
-                )
+            consumer_record = MagicMock(
+                topic="topic-1",
+                partition="2",
+                offset=123,
+                value={"event": event, "from": "", "user": "user_A"},
             )
+            cases.append((consumer_record, None))
         self._test_all(kafka_event.handle_event, cases)
-
-    @patch('mail_process_worker.logic.handle_kafka_event.get_offsets')
-    @patch('mail_process_worker.logic.handle_kafka_event.get_topic_partition')
-    def test_reread(self, mock_topic_partition, mock_offset):
-        consumer = MagicMock()
-        mock_topic_partition.return_value = TopicPartition()
-        mock_offset.return_value = 123, 456
-        pass
