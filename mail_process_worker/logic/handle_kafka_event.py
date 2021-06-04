@@ -82,12 +82,12 @@ def custom_event(event_name: str, data: dict):
 
 
 def handle_event(event):
-    data = event.value
+    data = event.get("value")
     data.update(
         {
-            "topic": event.topic,
-            "partition": event.partition,
-            "offset": event.offset,
+            "topic": event.get("topic"),
+            "partition": event.get("partition"),
+            "offset": event.get("offset"),
         }
     )
     logger.info(data)
@@ -100,13 +100,13 @@ def handle_event(event):
 
     logger.info(f"New event ==> {data['event']}")
     if data["event"] == "MessageAppend" and data["user"] in data.get("from", ""):
-        set_priority(data)
-        return
+        return set_priority(data)
     if data["event"] in ["MessageAppend", "MessageExpunge"]:
         try:
             custom_event("MessageMove", data)
-            return
         except Exception:
+            ...
+        finally: 
             return
     return set_priority(data)
 
