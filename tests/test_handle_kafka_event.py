@@ -2,14 +2,14 @@ import mail_process_worker.logic.handle_kafka_event as kafka_event
 import logging
 import calendar
 import time
-from tests.base import TestBase
+from tests.base import TestLogic
 from unittest.mock import patch, MagicMock
 from kafka.structs import TopicPartition
 
 logging.disable(logging.CRITICAL)
 
 
-class TestCustomEvent(TestBase):
+class TestCustomEvent(TestLogic):
     MESSAGE_FMT = "\nInput: {0!r}\nCorrect result is {1!r} \nReceive {2!r}"
 
     def test_message_move(self):

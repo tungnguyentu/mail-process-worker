@@ -1,7 +1,7 @@
 import unittest
 
 
-class TestBase(unittest.TestCase):
+class TestLogic(unittest.TestCase):
     MESSAGE_FMT = "Input: {0!r} - The correct result is {1!r}, receive {2!r}"
 
     def _test_all(self, func, cases):

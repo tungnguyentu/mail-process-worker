@@ -1,6 +1,8 @@
 import calendar
 import time
 
+from kafka.structs import OffsetAndMetadata
+
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import timeout
 from mail_process_worker.logic.kafka_utils import (
@@ -106,9 +108,8 @@ def handle_event(event):
     if data["event"] in ["MessageAppend", "MessageExpunge"]:
         try:
             custom_event("MessageMove", data)
+            return
         except Exception:
-            ...
-        finally:
             return
     return set_priority(data)
 
@@ -116,32 +117,22 @@ def handle_event(event):
 def re_read(data, consumer):
     offset_start, offset_end = get_offsets(data, consumer)
     tp = get_topic_partition(data)
-    start = time.time()
     try:
         consumer.seek(tp, offset=offset_start)
     except AssertionError:
         return
     while True:
-        if len(MESSAGES) == 5 or time.time() - start > 5:
-            send_to_kafka(consumer, USER_EVENTS)
-            USER_EVENTS.clear()
-            NEW_EVENT.clear()
-            MESSAGES.clear()
-            start = time.time()
-        else:
-            msg = consumer.poll(1000)
-            if not msg:
-                logger.info("poll timeout")
+        msg = consumer.poll(10)
+        if not msg:
+            logger.info("poll timeout222")
+            continue
+        for event in list(msg.values())[0]:
+            data = event.value
+            if data["event"] == "seek":
                 continue
-            start = time.time()
-            for event in list(msg.values())[0]:
-                data = event.value
-                if data["event"] == "seek":
-                    continue
-                if event.offset >= offset_end + 1:
-                    return
-
-                handle_event(event)
+            if event.offset >= offset_end + 1:
+                return
+            handle_event(event)
 
 
 def aggregate_event_by_amount(consumer):
@@ -159,13 +150,15 @@ def aggregate_event_by_amount(consumer):
                 logger.info("poll timeout")
                 continue
             start = time.time()
+            logger.info(f"MSG {list(msg.values())[0]}")
             for event in list(msg.values())[0]:
+                logger.info(f"EVENT {event}")
                 data = event.value
                 if data["event"] == "seek":
                     last_offset_commit = event.offset + 1
+                    logger.info(f"LAST OFFSET COMMIT {last_offset_commit}")
                     re_read(data, consumer)
                     tp = get_topic_partition(data)
-                    consumer.seek(tp, offset=last_offset_commit)
-                    logger.info(f"{last_offset_commit=}")
+                    consumer.seek(tp, last_offset_commit)
                     continue
                 handle_event(event)
