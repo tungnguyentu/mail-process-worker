@@ -38,7 +38,9 @@ def set_priority(data: dict):
         "MailboxDelete": 8,
     }
     event_name = data["event"]
-    user = data["user"]
+    user = data.get("user", None)
+    if not user:
+        return
     exist_user = USER_EVENTS.get(user, None)
     if not exist_user:
         USER_EVENTS.update({user: []})
@@ -85,13 +87,6 @@ def custom_event(event_name: str, data: dict):
 
 def handle_event(event):
     data = event.value
-    data.update(
-        {
-            "topic": event.topic,
-            "partition": event.partition,
-            "offset": event.offset,
-        }
-    )
     logger.info(data)
     if data["event"] in [
         "MessageRead",
@@ -99,6 +94,14 @@ def handle_event(event):
         "MailboxUnsubscribe",
     ]:
         return
+
+    data.update(
+        {
+            "topic": event.topic,
+            "partition": event.partition,
+            "offset": event.offset,
+        }
+    )
 
     logger.info(f"New event ==> {data['event']}")
     if data["event"] == "MessageAppend" and data["user"] in data.get(
@@ -124,13 +127,17 @@ def re_read(data, consumer):
     while True:
         msg = consumer.poll(10)
         if not msg:
-            logger.info("poll timeout222")
+            logger.info("poll timeout")
             continue
         for event in list(msg.values())[0]:
             data = event.value
             if data["event"] == "seek":
                 continue
             if event.offset >= offset_end + 1:
+                send_to_kafka(consumer, USER_EVENTS)
+                USER_EVENTS.clear()
+                NEW_EVENT.clear()
+                MESSAGES.clear()
                 return
             handle_event(event)
 
@@ -150,9 +157,7 @@ def aggregate_event_by_amount(consumer):
                 logger.info("poll timeout")
                 continue
             start = time.time()
-            logger.info(f"MSG {list(msg.values())[0]}")
             for event in list(msg.values())[0]:
-                logger.info(f"EVENT {event}")
                 data = event.value
                 if data["event"] == "seek":
                     last_offset_commit = event.offset + 1
@@ -160,5 +165,8 @@ def aggregate_event_by_amount(consumer):
                     re_read(data, consumer)
                     tp = get_topic_partition(data)
                     consumer.seek(tp, last_offset_commit)
+                    consumer.commit(
+                        {tp: OffsetAndMetadata(last_offset_commit, None)}
+                    )
                     continue
                 handle_event(event)

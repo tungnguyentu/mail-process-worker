@@ -53,13 +53,19 @@ def send_to_kafka(consumer: KafkaConsumer, user_event: dict):
                 value=event[1],
             )
             producer.flush()
-            tp = TopicPartition(
-                event[1].get("topic"), event[1].get("partition")
-            )
-            consumer.commit(
-                {tp: OffsetAndMetadata(event[1].get("offset") + 1, None)}
-            )
+            topic = event[1].get("topic")
+            partition = event[1].get("partition")
+            offset = event[1].get("offset")
+            kafka_commit(consumer, topic, partition, offset)
             logger.info(f"Done | {user=}")
+
+
+def kafka_commit(consumer, topic, partition, offset):
+    tp = TopicPartition(topic, partition)
+    consumer.commit({tp: OffsetAndMetadata(offset + 1, None)})
+    logger.info(
+        f"KAFKA COMMIT - TOPIC: {topic} - PARTITION: {partition} - OFFSET: {offset}"
+    )
 
 
 def get_topic_partition(data):
@@ -96,7 +102,10 @@ def get_offsets(data, consumer):
         timestamp_start = data.get("timestamp_start", None)
         timestamp_end = data.get("timestamp_end", None)
 
-        offset_timestamp_start, offset_timestamp_end = get_offset_and_timestamp(
+        (
+            offset_timestamp_start,
+            offset_timestamp_end,
+        ) = get_offset_and_timestamp(
             tp, consumer, timestamp_start, timestamp_end
         )
 
