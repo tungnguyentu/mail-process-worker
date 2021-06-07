@@ -165,7 +165,7 @@ def aggregate_event_by_amount(consumer):
                 if data["event"] == "seek":
                     last_offset_commit = event.offset + 1
                     logger.info(f"LAST OFFSET COMMIT {last_offset_commit}")
-                    re_read(data, consumer)
+                    resend(data, consumer)
                     tp = get_topic_partition(data)
                     consumer.seek(tp, last_offset_commit)
                     consumer.commit(
