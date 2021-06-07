@@ -117,9 +117,10 @@ def handle_event(event):
     return set_priority(data)
 
 
-def re_read(data, consumer):
+def resend(data, consumer):
     offset_start, offset_end = get_offsets(data, consumer)
     tp = get_topic_partition(data)
+    resend_user = data['user']
     try:
         consumer.seek(tp, offset=offset_start)
     except AssertionError:
@@ -130,8 +131,10 @@ def re_read(data, consumer):
             logger.info("poll timeout")
             continue
         for event in list(msg.values())[0]:
-            data = event.value
-            if data["event"] == "seek":
+            resend_data = event.value
+            if resend_data["event"] == "seek":
+                continue
+            if resend_data['user'] != resend_user:
                 continue
             if event.offset >= offset_end + 1:
                 send_to_kafka(consumer, USER_EVENTS)
