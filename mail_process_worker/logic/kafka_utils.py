@@ -20,10 +20,10 @@ def get_consumer():
         *KafkaConsumerConfig.KAFKA_TOPIC,
         group_id=KafkaConsumerConfig.KAFKA_CONSUMER_GROUP,
         bootstrap_servers=KafkaConsumerConfig.KAFKA_BROKER,
-        auto_offset_reset="earliest",
+        auto_offset_reset=KafkaConsumerConfig.KAFKA_AUTO_OFFSET_RESET,
         value_deserializer=lambda x: json.loads(x.decode("utf-8")),
-        enable_auto_commit=False,
-        max_poll_records=1000,
+        enable_auto_commit=KafkaConsumerConfig.KAFKA_ENABLE_AUTO_COMMIT,
+        max_poll_records=KafkaConsumerConfig.KAFKA_MAX_POLL_RECORDS,
     )
     logger.info("connect success")
     return consumer

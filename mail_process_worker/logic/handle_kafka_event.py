@@ -11,6 +11,8 @@ from mail_process_worker.logic.kafka_utils import (
     get_offsets,
 )
 
+from mail_process_worker.setting import WorkerConfig
+
 USER_EVENTS = {}
 
 NEW_EVENT = {}
@@ -120,7 +122,7 @@ def handle_event(event):
 def resend(data, consumer):
     offset_start, offset_end = get_offsets(data, consumer)
     tp = get_topic_partition(data)
-    resend_user = data['user']
+    resend_user = data["user"]
     try:
         consumer.seek(tp, offset=offset_start)
     except AssertionError:
@@ -134,7 +136,7 @@ def resend(data, consumer):
             resend_data = event.value
             if resend_data["event"] == "seek":
                 continue
-            if resend_data['user'] != resend_user:
+            if resend_data["user"] != resend_user:
                 continue
             if event.offset >= offset_end + 1:
                 send_to_kafka(consumer, USER_EVENTS)
@@ -148,7 +150,10 @@ def resend(data, consumer):
 def aggregate_event_by_amount(consumer):
     start = time.time()
     while True:
-        if len(MESSAGES) == 5 or time.time() - start > 5:
+        if (
+            len(MESSAGES) == WorkerConfig.NUMBER_OF_MESSAGE
+            or time.time() - start > WorkerConfig.WINDOW_DURATION
+        ):
             send_to_kafka(consumer, USER_EVENTS)
             USER_EVENTS.clear()
             NEW_EVENT.clear()
