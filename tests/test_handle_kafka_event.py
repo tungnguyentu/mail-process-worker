@@ -4,7 +4,6 @@ import calendar
 import time
 from tests.base import TestLogic
 from unittest.mock import patch, MagicMock
-from kafka.structs import TopicPartition
 
 logging.disable(logging.CRITICAL)
 

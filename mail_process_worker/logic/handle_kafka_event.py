@@ -1,15 +1,9 @@
 import calendar
 import time
 
-from kafka.structs import OffsetAndMetadata
-
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import timeout
-from mail_process_worker.logic.kafka_utils import (
-    send_to_kafka,
-    get_topic_partition,
-    get_offsets,
-)
+from mail_process_worker.logic.kafka_utils import send_to_kafka
 
 from mail_process_worker.setting import WorkerConfig
 
@@ -119,34 +113,6 @@ def handle_event(event):
     return set_priority(data)
 
 
-def resend(data, consumer):
-    offset_start, offset_end = get_offsets(data, consumer)
-    tp = get_topic_partition(data)
-    resend_user = data["user"]
-    try:
-        consumer.seek(tp, offset=offset_start)
-    except AssertionError:
-        return
-    while True:
-        msg = consumer.poll(10)
-        if not msg:
-            logger.info("poll timeout")
-            continue
-        for event in list(msg.values())[0]:
-            resend_data = event.value
-            if resend_data["event"] == "seek":
-                continue
-            if resend_data["user"] != resend_user:
-                continue
-            if event.offset >= offset_end + 1:
-                send_to_kafka(consumer, USER_EVENTS)
-                USER_EVENTS.clear()
-                NEW_EVENT.clear()
-                MESSAGES.clear()
-                return
-            handle_event(event)
-
-
 def aggregate_event_by_amount(consumer):
     start = time.time()
     while True:
@@ -166,15 +132,4 @@ def aggregate_event_by_amount(consumer):
                 continue
             start = time.time()
             for event in list(msg.values())[0]:
-                data = event.value
-                if data["event"] == "seek":
-                    last_offset_commit = event.offset + 1
-                    logger.info(f"LAST OFFSET COMMIT {last_offset_commit}")
-                    resend(data, consumer)
-                    tp = get_topic_partition(data)
-                    consumer.seek(tp, last_offset_commit)
-                    consumer.commit(
-                        {tp: OffsetAndMetadata(last_offset_commit, None)}
-                    )
-                    continue
                 handle_event(event)
