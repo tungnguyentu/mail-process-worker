@@ -14,13 +14,20 @@ NEW_EVENT = {}
 MESSAGES = []
 
 
+
 def get_current_timestamp():
     timestamp = calendar.timegm(time.gmtime())
     return timestamp
 
 
-def set_priority(data: dict):
+def set_priority(data: dict, consumer):
+    if len(MESSAGES) == WorkerConfig.NUMBER_OF_MESSAGE:
+        send_to_kafka(consumer, USER_EVENTS)
+        USER_EVENTS.clear()
+        NEW_EVENT.clear()
+        MESSAGES.clear()
     MESSAGES.append(data)
+
     logger.info(f"set priority for {data['event']}")
     event_priority = {
         "MailboxCreate": 1,
@@ -45,7 +52,7 @@ def set_priority(data: dict):
 
 
 @timeout(10)
-def custom_event(event_name: str, data: dict):
+def custom_event(event_name: str, data: dict, consumer):
     if event_name == "MessageMove":
         user = data["user"]
         if data["event"] == "MessageAppend":
@@ -77,11 +84,11 @@ def custom_event(event_name: str, data: dict):
                     "partition": data["partition"],
                 }
             )
-            set_priority(NEW_EVENT[user])
+            set_priority(NEW_EVENT[user], consumer)
         return None
 
 
-def handle_event(event):
+def handle_event(consumer, event):
     data = event.value
     logger.info(data)
     if data["event"] in [
@@ -100,25 +107,25 @@ def handle_event(event):
     )
 
     logger.info(f"New event ==> {data['event']}")
+    #if data['event'] == "MessageNew":
+       # return send_special_event(consumer, data['user'], data, "topic-2")
     if data["event"] == "MessageAppend" and data["user"] in data.get(
         "from", ""
     ):
-        return set_priority(data)
+        return set_priority(data, consumer)
     if data["event"] in ["MessageAppend", "MessageExpunge"]:
         try:
-            custom_event("MessageMove", data)
+            custom_event("MessageMove", data, consumer)
             return
         except Exception:
             return
-    return set_priority(data)
+    return set_priority(data, consumer)
 
 
 def aggregate_event_by_amount(consumer):
     start = time.time()
     while True:
-        if (
-            len(MESSAGES) == WorkerConfig.NUMBER_OF_MESSAGE
-            or time.time() - start > WorkerConfig.WINDOW_DURATION
+        if (time.time() - start > WorkerConfig.WINDOW_DURATION
         ):
             send_to_kafka(consumer, USER_EVENTS)
             USER_EVENTS.clear()
@@ -126,10 +133,10 @@ def aggregate_event_by_amount(consumer):
             MESSAGES.clear()
             start = time.time()
         else:
-            msg = consumer.poll(1000)
+            msg = consumer.poll(10000)
             if not msg:
                 logger.info("poll timeout")
                 continue
             start = time.time()
             for event in list(msg.values())[0]:
-                handle_event(event)
+                handle_event(consumer, event)
