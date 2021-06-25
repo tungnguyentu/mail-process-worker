@@ -21,7 +21,7 @@ def get_consumer():
         group_id=KafkaConsumerConfig.KAFKA_CONSUMER_GROUP,
         bootstrap_servers=KafkaConsumerConfig.KAFKA_BROKER,
         auto_offset_reset=KafkaConsumerConfig.KAFKA_AUTO_OFFSET_RESET,
-        value_deserializer=lambda x: json.loads(x.decode("utf-8")),
+        value_deserializer=lambda x: json.loads(x.decode("utf-8", "ignore")),
         enable_auto_commit=KafkaConsumerConfig.KAFKA_ENABLE_AUTO_COMMIT,
         max_poll_records=KafkaConsumerConfig.KAFKA_MAX_POLL_RECORDS,
     )
@@ -35,6 +35,7 @@ def get_producer():
     producer = KafkaProducer(
         bootstrap_servers=KafkaProducerConfig.KAFKA_BROKER,
         value_serializer=lambda x: json.dumps(x).encode("utf-8"),
+        retries=2
     )
     return producer
 
