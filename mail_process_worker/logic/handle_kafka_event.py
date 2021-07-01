@@ -1,6 +1,6 @@
 import calendar
 import time
-
+from datetime import datetime
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import timeout
 from mail_process_worker.logic.kafka_utils import send_to_kafka
@@ -111,7 +111,11 @@ def handle_event(consumer, event):
        # return send_special_event(consumer, data['user'], data, "topic-2")
     if data["event"] == "MessageAppend" and data["user"] in data.get(
         "from", ""
-    ):
+    ):  
+        event_timestamp = data['event_timestamp']
+        data.update({
+            "date": datetime.datetime.utcfromtimestamp(int(event_timestamp)).astimezone().replace(microsecond=0).isoformat()
+        })
         return set_priority(data, consumer)
     if data["event"] in ["MessageAppend", "MessageExpunge"]:
         try:
