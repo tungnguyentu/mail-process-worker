@@ -47,18 +47,19 @@ def send_to_kafka(consumer: KafkaConsumer, user_event: dict):
         events = user_event[user]
         events.sort(key=lambda x: x[0])
         for event in events:
-            logger.info(f"Send event to kafka| {user=} ==> {event[1]=}")
-            producer.send(
-                KafkaProducerConfig.KAFKA_TOPIC,
-                key=bytes(user, "utf-8"),
-                value=event[1],
-            )
-            producer.flush()
-            topic = event[1].get("topic")
-            partition = event[1].get("partition")
-            offset = event[1].get("offset")
-            kafka_commit(consumer, topic, partition, offset)
-            logger.info(f"Done | {user=}")
+            for tp in KafkaProducerConfig.KAFKA_TOPIC:
+                logger.info(f"Send event to kafka| USER {user} ==> EVENT {event[1]}")
+                producer.send(
+                    tp,
+                    key=bytes(user, "utf-8"),
+                    value=event[1],
+                )
+                producer.flush()
+                topic = event[1].get("topic")
+                partition = event[1].get("partition")
+                offset = event[1].get("offset")
+                kafka_commit(consumer, topic, partition, offset)
+                logger.info(f"Done | USER {user}")
 
 
 def kafka_commit(consumer, topic, partition, offset):

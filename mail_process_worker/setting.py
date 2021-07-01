@@ -23,7 +23,7 @@ class KafkaConsumerConfig:
 class KafkaProducerConfig:
     producer = config.get("KAFKA_PRODUCER")
     KAFKA_BROKER = producer.get("KAFKA_BROKER")
-    KAFKA_TOPIC = producer.get("KAFKA_TOPIC")
+    KAFKA_TOPIC = [producer.get("KAFKA_TOPIC").format(i+1) for i in range(producer.get("KAFKA_TOPIC_NUMBER"))]
 
 
 class WorkerConfig:

@@ -125,8 +125,7 @@ def handle_event(consumer, event):
 def aggregate_event_by_amount(consumer):
     start = time.time()
     while True:
-        if (time.time() - start > WorkerConfig.WINDOW_DURATION
-        ):
+        if (time.time() - start > WorkerConfig.WINDOW_DURATION):
             send_to_kafka(consumer, USER_EVENTS)
             USER_EVENTS.clear()
             NEW_EVENT.clear()
