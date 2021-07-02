@@ -1,6 +1,6 @@
 import calendar
 import time
-from datetime import datetime
+import datetime
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import timeout
 from mail_process_worker.logic.kafka_utils import send_to_kafka
@@ -12,7 +12,6 @@ USER_EVENTS = {}
 NEW_EVENT = {}
 
 MESSAGES = []
-
 
 
 def get_current_timestamp():
@@ -107,15 +106,22 @@ def handle_event(consumer, event):
     )
 
     logger.info(f"New event ==> {data['event']}")
-    #if data['event'] == "MessageNew":
-       # return send_special_event(consumer, data['user'], data, "topic-2")
+    # if data['event'] == "MessageNew":
+    # return send_special_event(consumer, data['user'], data, "topic-2")
     if data["event"] == "MessageAppend" and data["user"] in data.get(
         "from", ""
-    ):  
-        event_timestamp = data['event_timestamp']
-        data.update({
-            "date": datetime.datetime.utcfromtimestamp(int(event_timestamp)).astimezone().replace(microsecond=0).isoformat()
-        })
+    ):
+        event_timestamp = data["event_timestamp"]
+        data.update(
+            {
+                "date": datetime.datetime.utcfromtimestamp(
+                    int(event_timestamp)
+                )
+                .astimezone()
+                .replace(microsecond=0)
+                .isoformat()
+            }
+        )
         return set_priority(data, consumer)
     if data["event"] in ["MessageAppend", "MessageExpunge"]:
         try:
@@ -129,7 +135,7 @@ def handle_event(consumer, event):
 def aggregate_event_by_amount(consumer):
     start = time.time()
     while True:
-        if (time.time() - start > WorkerConfig.WINDOW_DURATION):
+        if time.time() - start > WorkerConfig.WINDOW_DURATION:
             send_to_kafka(consumer, USER_EVENTS)
             USER_EVENTS.clear()
             NEW_EVENT.clear()

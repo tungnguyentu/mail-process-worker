@@ -22,16 +22,10 @@ class KafkaConsumerConfig:
     KAFKA_MAX_POLL_RECORDS = consumer.get("KAFKA_MAX_POLL_RECORDS")
 
 
-
-
 class KafkaProducerConfig:
     producer = config.get("KAFKA_PRODUCER")
     KAFKA_BROKER = producer.get("KAFKA_BROKER")
-    KAFKA_TOPIC_NUMBER = producer.get("KAFKA_TOPIC_NUMBER")
-    TOPIC = producer.get("KAFKA_TOPIC")
-    KAFKA_TOPIC = []
-    for i in range(KAFKA_TOPIC_NUMBER):
-        KAFKA_TOPIC.append(TOPIC.format(i+1))
+    KAFKA_TOPIC = producer.get("KAFKA_TOPIC")
 
 
 class WorkerConfig:
