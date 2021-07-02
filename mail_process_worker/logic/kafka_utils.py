@@ -1,6 +1,7 @@
 from mail_process_worker.setting import (
     KafkaConsumerConfig,
     KafkaProducerConfig,
+    AuthConfig
 )
 
 import json
@@ -10,7 +11,11 @@ from mail_process_worker.utils.decorator import timeout, retry
 
 from kafka.structs import OffsetAndMetadata
 from kafka import KafkaConsumer, KafkaProducer, TopicPartition
+import ssl
 
+context = ssl.create_default_context()
+context.options &= ssl.OP_NO_TLSv1
+context.options &= ssl.OP_NO_TLSv1_1
 
 @retry(times=3, delay=1)
 @timeout(10)
@@ -20,6 +25,11 @@ def get_consumer():
         *KafkaConsumerConfig.KAFKA_TOPIC,
         group_id=KafkaConsumerConfig.KAFKA_CONSUMER_GROUP,
         bootstrap_servers=KafkaConsumerConfig.KAFKA_BROKER,
+        sasl_plain_username=AuthConfig.SASL_PLAIN_USERNAME,
+        sasl_plain_password =AuthConfig.SASL_PLAIN_PASSWORD,
+        security_protocol=AuthConfig.SECURITY_PROTOCOL,
+        ssl_context = context,
+        sasl_mechanism=AuthConfig.SASL_MECHANISM,
         auto_offset_reset=KafkaConsumerConfig.KAFKA_AUTO_OFFSET_RESET,
         value_deserializer=lambda x: json.loads(x.decode("utf-8", "ignore")),
         enable_auto_commit=KafkaConsumerConfig.KAFKA_ENABLE_AUTO_COMMIT,
@@ -34,6 +44,11 @@ def get_consumer():
 def get_producer():
     producer = KafkaProducer(
         bootstrap_servers=KafkaProducerConfig.KAFKA_BROKER,
+        sasl_plain_username=AuthConfig.SASL_PLAIN_USERNAME,
+        sasl_plain_password =AuthConfig.SASL_PLAIN_PASSWORD,
+        security_protocol=AuthConfig.SECURITY_PROTOCOL,
+        ssl_context = context,
+        sasl_mechanism=AuthConfig.SASL_MECHANISM,
         value_serializer=lambda x: json.dumps(x).encode("utf-8"),
         retries=2,
     )

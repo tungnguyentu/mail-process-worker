@@ -32,3 +32,11 @@ class WorkerConfig:
     worker = config.get("WORKER")
     WINDOW_DURATION = worker.get("WINDOW_DURATION")
     NUMBER_OF_MESSAGE = worker.get("NUMBER_OF_MESSAGE")
+
+
+class AuthConfig:
+    auth = config.get("AUTH")
+    SASL_PLAIN_USERNAME = auth.get("SASL_PLAIN_USERNAME")
+    SASL_PLAIN_PASSWORD = auth.get("SASL_PLAIN_PASSWORD")
+    SECURITY_PROTOCOL = auth.get("SECURITY_PROTOCOL")
+    SASL_MECHANISM = auth.get("SASL_MECHANISM")
