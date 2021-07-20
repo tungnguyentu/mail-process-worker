@@ -106,8 +106,6 @@ def handle_event(consumer, event):
     )
 
     logger.info(f"New event ==> {data['event']}")
-    # if data['event'] == "MessageNew":
-    # return send_special_event(consumer, data['user'], data, "topic-2")
     if data["event"] == "MessageAppend" and data["user"] in data.get(
         "from", ""
     ):
