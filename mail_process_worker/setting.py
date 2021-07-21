@@ -1,32 +1,36 @@
-import os
-import json
+from environs import Env
 
-
-CONF_FILE = os.path.join(
-    os.path.dirname(os.path.abspath("config.json")), "config.json"
-)
-
-with open(CONF_FILE, "r") as f:
-    config = json.load(f)
+env = Env()
+env.read_env()
 
 
 class KafkaConsumerConfig:
-    consumer = config.get("KAFKA_CONSUMER")
-    KAFKA_BROKER = consumer.get("KAFKA_BROKER")
-    KAFKA_TOPIC = consumer.get("KAFKA_TOPIC")
-    KAFKA_CONSUMER_GROUP = consumer.get("KAFKA_CONSUMER_GROUP")
-    KAFKA_ENABLE_AUTO_COMMIT = consumer.get("KAFKA_ENABLE_AUTO_COMMIT")
-    KAFKA_AUTO_OFFSET_RESET = consumer.get("KAFKA_AUTO_OFFSET_RESET")
-    KAFKA_MAX_POLL_RECORDS = consumer.get("KAFKA_MAX_POLL_RECORDS")
+    KAFKA_BROKER = env.list("KAFKA_BROKER")
+    KAFKA_CONSUMER_TOPIC = env.list("KAFKA_CONSUMER_TOPIC")
+    KAFKA_CONSUMER_GROUP = env.str("KAFKA_CONSUMER_GROUP")
+    KAFKA_ENABLE_AUTO_COMMIT = env.bool("KAFKA_ENABLE_AUTO_COMMIT")
+    KAFKA_AUTO_OFFSET_RESET = env.str("KAFKA_AUTO_OFFSET_RESET")
+    KAFKA_MAX_POLL_RECORDS = env.int("KAFKA_MAX_POLL_RECORDS")
+    KAFKA_POLL_TIMEOUT = env.int("KAFKA_POLL_TIMEOUT")
 
 
-class KafkaProducerConfig:
-    producer = config.get("KAFKA_PRODUCER")
-    KAFKA_BROKER = producer.get("KAFKA_BROKER")
-    KAFKA_TOPIC = producer.get("KAFKA_TOPIC")
+class KafkaAuth:
+    SASL_PLAIN_USERNAME = env.str("SASL_PLAIN_USERNAME")
+    SASL_PLAIN_PASSWORD = env.str("SASL_PLAIN_PASSWORD")
+    SECURITY_PROTOCOL = env.str("SECURITY_PROTOCOL")
+    SASL_MECHANISM = env.str("SASL_MECHANISM")
+
+
+class MQTTConfig:
+    CLIENT_ID = env.str("CLIENT_ID")
+    MQTT_BROKER = env.str("MQTT_BROKER")
+    MQTT_PORT = env.int("MQTT_PORT")
+    MQTT_USERNAME = env.str("MQTT_USERNAME")
+    MQTT_PASSWORD = env.str("MQTT_PASSWORD")
+    MQTT_TOPIC = env.str("MQTT_TOPIC")
+    MQTT_QoS = env.int("MQTT_Qos")
 
 
 class WorkerConfig:
-    worker = config.get("WORKER")
-    WINDOW_DURATION = worker.get("WINDOW_DURATION")
-    NUMBER_OF_MESSAGE = worker.get("NUMBER_OF_MESSAGE")
+    WINDOW_DURATION = env.int("WINDOW_DURATION")
+    NUMBER_OF_MESSAGE = env.int("NUMBER_OF_MESSAGE")
