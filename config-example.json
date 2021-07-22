@@ -1,0 +1,28 @@
+{
+        "KAFKA_CONSUMER":{
+                "KAFKA_BROKER":[
+                        
+                ],
+                "KAFKA_TOPIC": [],
+                "KAFKA_CONSUMER_GROUP": ,
+                "KAFKA_ENABLE_AUTO_COMMIT": false,
+                "KAFKA_AUTO_OFFSET_RESET": "earliest",
+                "KAFKA_MAX_POLL_RECORDS": 1
+        },
+        "KAFKA_PRODUCER":{
+                "KAFKA_BROKER": [
+                        
+                ],
+                "KAFKA_TOPIC": ""
+        },
+        "WORKER": {
+                "NUMBER_OF_MESSAGE": 5,
+                "WINDOW_DURATION": 5
+        },
+        "AUTH": {
+                "SASL_PLAIN_USERNAME": "",
+                "SASL_PLAIN_PASSWORD": "",
+                "SECURITY_PROTOCOL": "",
+                "SASL_MECHANISM": ""
+        }
+}
