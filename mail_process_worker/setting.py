@@ -28,7 +28,8 @@ class MQTTConfig:
     MQTT_USERNAME = env.str("MQTT_USERNAME")
     MQTT_PASSWORD = env.str("MQTT_PASSWORD")
     MQTT_TOPIC = env.str("MQTT_TOPIC")
-    MQTT_QoS = env.int("MQTT_Qos")
+    MQTT_QoS = env.int("MQTT_QoS")
+    MQTT_RETAIN = env.bool("MQTT_RETAIN")
 
 
 class WorkerConfig:

@@ -14,7 +14,6 @@ class HandleEvent:
         self.new_event = {}
         self.messages = []
         self.mqtt = MQTTClient()
-        self.mqtt.connect_server()
         self.consumer = KafkaConsumerClient()
         self.consumer.create_consumer()
 
@@ -24,7 +23,8 @@ class HandleEvent:
 
     def set_priority(self, data: dict):
         if len(self.messages) == WorkerConfig.NUMBER_OF_MESSAGE:
-            self.mqtt.publish_message(self.user_events)
+            self.mqtt.ordered_message(self.user_events)
+            self.mqtt.publish_multiple_message()
             self.user_events.clear()
             self.new_event.clear()
             self.messages.clear()
@@ -123,7 +123,8 @@ class HandleEvent:
         start = time.time()
         while True:
             if time.time() - start > WorkerConfig.WINDOW_DURATION:
-                self.mqtt.publish_message(self.user_events)
+                self.mqtt.ordered_message(self.user_events)
+                self.mqtt.publish_multiple_message()
                 self.user_events.clear()
                 self.new_event.clear()
                 self.messages.clear()

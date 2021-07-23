@@ -1,4 +1,5 @@
 import json
+from os import stat
 
 from kafka import KafkaConsumer
 from kafka.structs import TopicPartition, OffsetAndMetadata
@@ -40,9 +41,10 @@ class KafkaConsumerClient:
         msg = self.consumer.poll(self.poll_timeout)
         return msg
 
-    def kafka_commit(self, partition, offset):
-        tp = TopicPartition(self.topic, partition)
-        self.consumer.commit({tp: OffsetAndMetadata(offset + 1, None)})
+    @staticmethod
+    def kafka_commit(consumer, topic, partition, offset):
+        tp = TopicPartition(topic, partition)
+        consumer.commit({tp: OffsetAndMetadata(offset + 1, None)})
         logger.info(
-            f"KAFKA COMMIT - TOPIC: {self.topic} - PARTITION: {partition} - OFFSET: {offset}"
+            f"KAFKA COMMIT - TOPIC: {topic} - PARTITION: {partition} - OFFSET: {offset}"
         )
