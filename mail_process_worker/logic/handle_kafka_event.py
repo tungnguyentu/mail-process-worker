@@ -90,7 +90,9 @@ class HandleEvent:
 
     def handle_event(self, event):
         data = event.value
-        logger.info(data)
+        logger.info(f"DATA {data}")
+        if not data:
+            return
         if data["event"] in [
             "MessageRead",
             "MailboxSubscribe",
