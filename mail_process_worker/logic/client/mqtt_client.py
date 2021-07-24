@@ -20,7 +20,7 @@ class MQTTClient:
         self.password = MQTTConfig.MQTT_PASSWORD
         self.topic = MQTTConfig.MQTT_TOPIC
         self.qos = MQTTConfig.MQTT_QoS
-        self.retain = MQTTConfig.MQTT_RETAIN
+        self.keep_alive = MQTTConfig.MQTT_KEEPALIVE
         self.mqtt_msgs = []
 
     @retry(times=3, delay=1)
@@ -29,17 +29,22 @@ class MQTTClient:
         self.client = mqtt.Client(self.client_id)
         self.client.username_pw_set(self.username, self.password)
         self.client.on_connect = MQTTClient.on_connect
-        self.client.connect(self.broker, self.port)
+        self.client.connect(self.broker, self.port, self.keep_alive)
         return self.client
 
     @staticmethod
     def on_connect(client, userdata, flags, rc):
-        logger.info(f"Result from connect: {mqtt.connack_string(rc)}")
-    
+        logger.info("Result from connect: {}".format(mqtt.connack_string(rc)))
+        if rc == 0:
+            logger.info("Connection successful")
+        else:
+            logger.info("Failed to connect, return code {}\n".format(rc))
+            client.reconnect()
+
     @staticmethod
     def on_log(client, userdata, level, buf):
         logger.info(buf)
-    
+
     def ordered_message(self, user_messages: dict):
         for user in user_messages:
             messages = user_messages[user]
@@ -72,12 +77,18 @@ class MQTTClient:
     def publish_message(self, consumer):
         for msg in self.mqtt_msgs:
             payload = msg.get("payload", {})
-            qos = msg.get('qos', 1)
+            qos = msg.get("qos", 1)
             mqtt_topic = msg.get("topic")
             logger.info("MQTT TOPIC {}".format(mqtt_topic))
-            rc, _ = self.client.publish(topic=mqtt_topic, payload=payload, qos=qos)
-            if rc != 0:
-                self.client.reconnect()
+            mqtt_publish.single(
+                topic=mqtt_topic,
+                payload=payload,
+                qos=qos,
+                hostname=self.broker,
+                port=self.port,
+                client_id=self.client_id,
+                auth={"username": self.username, "password": self.password},
+            )
             self.commit(consumer, payload)
         self.mqtt_msgs.clear()
 
@@ -96,4 +107,6 @@ class MQTTClient:
         event_topic = payload.get("topic")
         partition = payload.get("partition")
         offset = payload.get("offset")
-        KafkaConsumerClient.kafka_commit(consumer, event_topic, partition, offset)
+        KafkaConsumerClient.kafka_commit(
+            consumer, event_topic, partition, offset
+        )

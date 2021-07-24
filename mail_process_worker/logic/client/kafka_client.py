@@ -1,5 +1,4 @@
 import json
-from os import stat
 
 from kafka import KafkaConsumer
 from kafka.structs import TopicPartition, OffsetAndMetadata

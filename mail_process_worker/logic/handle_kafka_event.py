@@ -24,7 +24,7 @@ class HandleEvent:
     def set_priority(self, data: dict):
         if len(self.messages) == WorkerConfig.NUMBER_OF_MESSAGE:
             self.mqtt.ordered_message(self.user_events)
-            self.mqtt.publish_multiple_message()
+            self.mqtt.publish_message(self.consumer.consumer)
             self.user_events.clear()
             self.new_event.clear()
             self.messages.clear()
@@ -124,7 +124,7 @@ class HandleEvent:
         while True:
             if time.time() - start > WorkerConfig.WINDOW_DURATION:
                 self.mqtt.ordered_message(self.user_events)
-                self.mqtt.publish_multiple_message()
+                self.mqtt.publish_message(self.consumer.consumer)
                 self.user_events.clear()
                 self.new_event.clear()
                 self.messages.clear()
