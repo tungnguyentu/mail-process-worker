@@ -62,7 +62,6 @@ class MQTTClient:
         msg_format = {
             "payload": message,
             "qos": self.qos,
-            "retain": self.retain,
         }
         if uids > 1:
             topic = f"bulk/{self.topic.format(domain, username)}"
