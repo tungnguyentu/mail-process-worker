@@ -1,1 +1,5 @@
+environs==9.3.2
 kafka-python==2.0.2
+marshmallow==3.12.2
+paho-mqtt==1.5.1
+python-dotenv==0.18.0

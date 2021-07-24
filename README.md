@@ -1,8 +1,7 @@
 # Mail process worker
 
 ## CONFIG
-
-see config in config-example.json
+detail in .env.example
 
 ## RUN
 
