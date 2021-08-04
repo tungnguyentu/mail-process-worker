@@ -63,7 +63,7 @@ class MQTTClient:
             "payload": message,
             "qos": self.qos
         }
-        if uids > 1:
+        if uids > 1 or message.get("event") == "MessageMove":
             topic = f"bulk/{self.topic.format(domain, username)}"
             msg_format.update({"topic": topic})
         else:
