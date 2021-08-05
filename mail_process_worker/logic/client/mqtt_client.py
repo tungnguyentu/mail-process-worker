@@ -58,9 +58,9 @@ class MQTTClient:
         special_char = user.find("@")
         username = user[:special_char]
         domain = user[special_char + 1 :]
-        message = json.dumps(message)
+        payload = json.dumps(message)
         msg_format = {
-            "payload": message,
+            "payload": payload,
             "qos": self.qos
         }
         if uids > 1 or message.get("event") == "MessageMove":
