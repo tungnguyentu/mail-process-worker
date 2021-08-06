@@ -58,12 +58,12 @@ class MQTTClient:
         special_char = user.find("@")
         username = user[:special_char]
         domain = user[special_char + 1 :]
-        message = json.dumps(message)
+        payload = json.dumps(message)
         msg_format = {
-            "payload": message,
+            "payload": payload,
             "qos": self.qos,
         }
-        if uids > 1:
+        if uids > 1 or message.get("event") == "MessageMove":
             topic = f"bulk/{self.topic.format(domain, username)}"
             msg_format.update({"topic": topic})
         else:
