@@ -78,7 +78,7 @@ class MQTTClient:
             payload = msg.get("payload", {})
             qos = msg.get("qos", 1)
             mqtt_topic = msg.get("topic")
-            logger.info("MQTT TOPIC {}".format(mqtt_topic))
+            logger.info("SENDING MESSAGE: {} TO TOPIC: {}".format(payload, mqtt_topic))
             mqtt_publish.single(
                 topic=mqtt_topic,
                 payload=payload,
