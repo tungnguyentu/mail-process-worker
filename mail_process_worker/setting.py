@@ -14,13 +14,6 @@ class KafkaConsumerConfig:
     KAFKA_POLL_TIMEOUT = env.int("KAFKA_POLL_TIMEOUT")
 
 
-class KafkaAuth:
-    SASL_PLAIN_USERNAME = env.str("SASL_PLAIN_USERNAME")
-    SASL_PLAIN_PASSWORD = env.str("SASL_PLAIN_PASSWORD")
-    SECURITY_PROTOCOL = env.str("SECURITY_PROTOCOL")
-    SASL_MECHANISM = env.str("SASL_MECHANISM")
-
-
 class MQTTConfig:
     CLIENT_ID = env.str("CLIENT_ID")
     MQTT_BROKER = env.str("MQTT_BROKER")
