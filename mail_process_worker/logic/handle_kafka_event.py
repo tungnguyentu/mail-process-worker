@@ -120,6 +120,7 @@ class HandleEvent:
         return self.set_priority(data)
 
     def aggregate_event_by_amount(self):
+        raise Exception("TEST")
         start = time.time()
         while True:
             if time.time() - start > WorkerConfig.WINDOW_DURATION:

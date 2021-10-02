@@ -28,3 +28,6 @@ class MQTTConfig:
 class WorkerConfig:
     WINDOW_DURATION = env.int("WINDOW_DURATION")
     NUMBER_OF_MESSAGE = env.int("NUMBER_OF_MESSAGE")
+
+class SentryConfig:
+    SENTRY_DSN = env.str("SENTRY_DSN")
