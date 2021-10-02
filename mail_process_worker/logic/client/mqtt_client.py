@@ -1,5 +1,4 @@
 import json
-import time
 
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as mqtt_publish
