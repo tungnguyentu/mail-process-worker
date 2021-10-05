@@ -5,6 +5,7 @@ from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import timeout
 from mail_process_worker.logic.client.mqtt_client import MQTTClient
 from mail_process_worker.logic.client.kafka_client import KafkaConsumerClient
+from mail_process_worker.logic.client.redis_client import rdb
 from mail_process_worker.setting import WorkerConfig
 
 
@@ -113,11 +114,19 @@ class HandleEvent:
             return self.set_priority(data)
         return self.set_priority(data)
 
+    def delay_event(self):
+        for _ in range(150):
+            if rdb.get("DISTRIBUTED_LOCK"):
+                time.sleep(0.1)
+            else:
+                break
+            
     def aggregate_event_by_amount(self):
         start = time.time()
         while True:
             if time.time() - start > WorkerConfig.WINDOW_DURATION:
                 self.mqtt.ordered_message(self.user_events)
+                self.delay_event()
                 self.mqtt.publish_message(self.consumer.consumer)
                 self.user_events.clear()
                 self.new_event.clear()
