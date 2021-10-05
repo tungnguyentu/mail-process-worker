@@ -117,6 +117,7 @@ class HandleEvent:
     def delay_event(self):
         for _ in range(150):
             if rdb.get("DISTRIBUTED_LOCK"):
+                logger.info("DISTRIBUTED_LOCK!!!!")
                 time.sleep(0.1)
             else:
                 break
