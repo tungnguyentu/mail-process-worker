@@ -92,6 +92,7 @@ class HandleEvent:
     def handle_event(self, event):
         data = event.value
         logger.info(data)
+        self.delay_event(data.get('user'), data.get("msgid"))
         if data["event"] in [
             "MessageRead",
             "MailboxSubscribe",
@@ -114,10 +115,16 @@ class HandleEvent:
             return self.set_priority(data)
         return self.set_priority(data)
 
-    def delay_event(self):
+    def delay_event(self, user, message_id_header):
+        message_id_header = message_id_header.strip()
+        key = '{key}_{email}_{msg_id_header}'.format(
+            email=user,
+            key='DISTRIBUTED_LOCK',
+            msg_id_header=message_id_header
+        )
         for _ in range(150):
-            if rdb.get("DISTRIBUTED_LOCK"):
-                logger.info("DISTRIBUTED_LOCK!!!!")
+            if rdb.get(key):
+                logger.info("DISTRIBUTED_LOCK!!!! KEY: {}".format(key))
                 time.sleep(0.1)
             else:
                 break
@@ -127,7 +134,6 @@ class HandleEvent:
         while True:
             if time.time() - start > WorkerConfig.WINDOW_DURATION:
                 self.mqtt.ordered_message(self.user_events)
-                self.delay_event()
                 self.mqtt.publish_message(self.consumer.consumer)
                 self.user_events.clear()
                 self.new_event.clear()
