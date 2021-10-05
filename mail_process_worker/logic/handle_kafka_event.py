@@ -116,6 +116,8 @@ class HandleEvent:
         return self.set_priority(data)
 
     def delay_event(self, user, message_id_header):
+        if not message_id_header:
+            return
         message_id_header = message_id_header.strip()
         key = '{key}_{email}_{msg_id_header}'.format(
             email=user,
