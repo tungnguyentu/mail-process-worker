@@ -23,6 +23,7 @@ class MQTTConfig:
     MQTT_TOPIC = env.str("MQTT_TOPIC")
     MQTT_QoS = env.int("MQTT_QoS")
     MQTT_KEEPALIVE = env.int("MQTT_KEEPALIVE")
+    MQTT_CLEAN_SESSION = env.str("MQTT_CLEAN_SESSION")
 
 
 class RedisConfig:
