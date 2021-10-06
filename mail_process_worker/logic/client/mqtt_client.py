@@ -21,12 +21,13 @@ class MQTTClient:
         self.topic = MQTTConfig.MQTT_TOPIC
         self.qos = MQTTConfig.MQTT_QoS
         self.keep_alive = MQTTConfig.MQTT_KEEPALIVE
+        self.clean_session = MQTTConfig.MQTT_CLEAN_SESSION
         self.mqtt_msgs = []
 
     @retry(times=3, delay=1)
     @timeout(10)
     def connect_server(self):
-        self.client = mqtt.Client(self.client_id)
+        self.client = mqtt.Client(self.client_id, self.clean_session)
         self.client.username_pw_set(self.username, self.password)
         self.client.on_connect = MQTTClient.on_connect
         self.client.connect(self.broker, self.port, self.keep_alive)
