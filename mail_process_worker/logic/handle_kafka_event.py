@@ -1,5 +1,6 @@
 import time
 import calendar
+import uuid
 
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import timeout
@@ -38,7 +39,7 @@ class HandleEvent:
             "MessageAppend": 4,
             "FlagsSet": 5,
             "FlagsClear": 5,
-            "MessageMove": 6,
+            "MessageExpunge": 6,
             "MessageTrash": 7,
             "MailboxDelete": 8,
         }
@@ -102,6 +103,7 @@ class HandleEvent:
 
         data.update(
             {
+                "id": str(uuid.uuid4()),
                 "topic": event.topic,
                 "partition": event.partition,
                 "offset": event.offset,
@@ -113,12 +115,6 @@ class HandleEvent:
             "from", ""
         ):
             return self.set_priority(data)
-        if data["event"] in ["MessageAppend", "MessageExpunge"]:
-            try:
-                self.custom_event("MessageMove", data)
-                return
-            except Exception:
-                return
         return self.set_priority(data)
 
     def aggregate_event_by_amount(self):
@@ -134,7 +130,6 @@ class HandleEvent:
             else:
                 msg = self.consumer.poll_message()
                 if not msg:
-                    logger.info("poll timeout")
                     continue
                 start = time.time()
                 for event in list(msg.values())[0]:
