@@ -1,5 +1,6 @@
 import time
 import calendar
+import uuid
 
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import timeout
@@ -102,6 +103,7 @@ class HandleEvent:
 
         data.update(
             {
+                "id": str(uuid.uuid4()),
                 "topic": event.topic,
                 "partition": event.partition,
                 "offset": event.offset,
@@ -144,7 +146,6 @@ class HandleEvent:
             else:
                 msg = self.consumer.poll_message()
                 if not msg:
-                    logger.info("poll timeout")
                     continue
                 start = time.time()
                 for event in list(msg.values())[0]:
