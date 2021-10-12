@@ -127,7 +127,7 @@ class HandleEvent:
             msg_id_header=message_id_header
         )
         for _ in range(150):
-            if rdb.get(key):
+            if rdb.hget("lock", key):
                 logger.info("DISTRIBUTED_LOCK!!!! KEY: {}".format(key))
                 time.sleep(0.1)
             else:
