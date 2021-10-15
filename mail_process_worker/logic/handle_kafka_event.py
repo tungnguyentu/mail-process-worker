@@ -6,6 +6,7 @@ from mail_process_worker.utils.decorator import timeout
 from mail_process_worker.logic.client.mqtt_client import MQTTClient
 from mail_process_worker.logic.client.kafka_client import KafkaConsumerClient
 from mail_process_worker.setting import WorkerConfig
+from mail_process_worker.logic.client.redis_client import rdb
 
 
 class HandleEvent:
@@ -120,6 +121,22 @@ class HandleEvent:
             except Exception:
                 return
         return self.set_priority(data)
+    
+    def delay_event(self, user, message_id_header):
+        if not message_id_header:
+            return
+        message_id_header = message_id_header.strip()
+        key = '{key}_{email}_{msg_id_header}'.format(
+            email=user,
+            key='DISTRIBUTED_LOCK',
+            msg_id_header=message_id_header
+        )
+        for _ in range(150):
+            if rdb.hget("lock", key):
+                logger.info("DISTRIBUTED_LOCK!!!! KEY: {}".format(key))
+                time.sleep(0.1)
+            else:
+                break
 
     def aggregate_event_by_amount(self):
         start = time.time()
