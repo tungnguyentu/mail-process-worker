@@ -92,7 +92,7 @@ class HandleEvent:
 
     def handle_event(self, event):
         data = event.value
-        logger.info(f"DATA {data}")
+        self.delay_event(data.get('user'), data.get("msgid"))
         if not data:
             return
         if data["event"] in [
