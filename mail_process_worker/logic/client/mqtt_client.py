@@ -29,12 +29,12 @@ class MQTTClient:
     def connect_server(self):
         self.client = mqtt.Client(self.client_id, self.clean_session)
         self.client.username_pw_set(self.username, self.password)
-        self.client.on_connect = MQTTClient.on_connect
+        self.client.on_connect = self.on_connect
         self.client.connect(self.broker, self.port, self.keep_alive)
+        self.client.on_log = self.on_log
         return self.client
 
-    @staticmethod
-    def on_connect(client, userdata, flags, rc):
+    def on_connect(self, client, userdata, flags, rc):
         logger.info("Result from connect: {}".format(mqtt.connack_string(rc)))
         if rc == 0:
             logger.info("Connection successful")
@@ -42,8 +42,7 @@ class MQTTClient:
             logger.info("Failed to connect, return code {}\n".format(rc))
             client.reconnect()
 
-    @staticmethod
-    def on_log(client, userdata, level, buf):
+    def on_log(self, client, userdata, level, buf):
         logger.info(buf)
 
     def ordered_message(self, user_messages: dict):
