@@ -1,4 +1,5 @@
 from environs import Env
+import os
 
 env = Env()
 env.read_env()
@@ -22,7 +23,7 @@ class KafkaAuth:
 
 
 class MQTTConfig:
-    CLIENT_ID = env.str("CLIENT_ID")
+    CLIENT_ID = os.environ("CLIENT_ID")
     MQTT_BROKER = env.str("MQTT_BROKER")
     MQTT_PORT = env.int("MQTT_PORT")
     MQTT_USERNAME = env.str("MQTT_USERNAME")
