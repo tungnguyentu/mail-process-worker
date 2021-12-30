@@ -41,7 +41,7 @@ def retry(times=3, delay=1, exceptions=Exception, logger=None):
                         "attempt {} of {}".format(func, attempt, times)
                     )
                     if logger:
-                        logger.info(message)
+                        logger.warning(message)
                     else:
                         print(message)
                     attempt += 1
