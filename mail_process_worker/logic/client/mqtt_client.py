@@ -103,6 +103,7 @@ class MQTTClient:
         )
         self.mqtt_msgs.clear()
 
+    @retry()
     def commit(self, consumer, payload):
         payload = json.loads(payload)
         event_topic = payload.get("topic")
