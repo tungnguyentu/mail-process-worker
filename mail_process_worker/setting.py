@@ -23,7 +23,7 @@ class KafkaAuth:
 
 
 class MQTTConfig:
-    CLIENT_ID = os.environ("CLIENT_ID")
+    CLIENT_ID = os.environ.get("CLIENT_ID")
     MQTT_BROKER = env.str("MQTT_BROKER")
     MQTT_PORT = env.int("MQTT_PORT")
     MQTT_USERNAME = env.str("MQTT_USERNAME")
