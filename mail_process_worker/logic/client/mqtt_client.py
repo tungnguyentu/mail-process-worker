@@ -79,8 +79,8 @@ class MQTTClient:
             qos = msg.get("qos", 1)
             mqtt_topic = msg.get("topic")
             p = json.loads(payload)
-            logger.info(f"LOG TRACKING: {p.get('user')}-{p.get('mailbox')}-{p.get('uids')}")
             logger.info("SENDING MESSAGE: {} TO TOPIC: {}".format(payload, mqtt_topic))
+            logger.info(f"MAIL_PROCESS LOG TRACKING: {p.get('user')}-{p.get('mailbox')}-{p.get('uids')}-{p.get('event')}")
             mqtt_publish.single(
                 topic=mqtt_topic,
                 payload=payload,
