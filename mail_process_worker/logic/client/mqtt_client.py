@@ -64,10 +64,10 @@ class MQTTClient:
             "qos": self.qos,
         }
         if uids > 1 or message.get("event") == "MessageMove":
-            topic = f"bulk/{self.topic.format(domain, username)}"
+            topic = self.topic.format(user, "aggregated")
             msg_format.update({"topic": topic})
         else:
-            topic = self.topic.format(domain, username)
+            topic = self.topic.format(user, "normal")
             msg_format.update({"topic": topic})
         self.mqtt_msgs.append(msg_format)
 
