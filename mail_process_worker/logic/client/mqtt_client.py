@@ -92,7 +92,9 @@ class MQTTClient:
             )
             self.commit(consumer, payload)
         self.mqtt_msgs.clear()
-
+    
+    @retry(delay=2)
+    @timeout(60)
     def publish(self, client, consumer):
         for msg in self.mqtt_msgs:
             payload = msg.get("payload", {})
@@ -106,6 +108,7 @@ class MQTTClient:
                 logger.info("Send `%s` to topic `%s`", log, mqtt_topic)
             else:
                 logger.info("Failed to send `%s` to topic %s",log, mqtt_topic)
+                raise Exception
             self.commit(consumer, payload)
         self.mqtt_msgs.clear()
 
