@@ -1,5 +1,6 @@
 import json
 import time
+import os
 
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as mqtt_publish
@@ -23,6 +24,7 @@ class MQTTClient:
         self.keep_alive = MQTTConfig.MQTT_KEEPALIVE
         self.clean_session = MQTTConfig.MQTT_CLEAN_SESSION
         self.mqtt_msgs = []
+        self.debug_id = "{}_{}".format(time.time(), os.getpid())
 
     @retry(times=3, delay=1)
     @timeout(10)
@@ -35,7 +37,7 @@ class MQTTClient:
         return self.client
 
     def on_connect(self, client, userdata, flags, rc):
-        logger.info("Result from connect: {}".format(mqtt.connack_string(rc)))
+        logger.info("[{}] Result from connect: {}".format(self.debug_id, mqtt.connack_string(rc)))
         if rc == 0:
             logger.info("Connection successful")
         else:
@@ -43,7 +45,7 @@ class MQTTClient:
             client.reconnect()
 
     def on_log(self, client, userdata, level, buf):
-        logger.info(buf)
+        logger.info("[{}] mqtt log: {}".format(self.debug_id, buf))
 
     def ordered_message(self, user_messages: dict):
         for user in user_messages:
@@ -106,9 +108,10 @@ class MQTTClient:
             log = f"{_payload.get('user')}-{_payload.get('mailbox')}-{_payload.get('uids')}"
             status = result[0]
             if status == 0:
-                logger.info("Send message: {} to topic: {}".format(payload, mqtt_topic))
+                logger.info("[{}] Send message: {} to topic: {}".format(self.debug_id, payload, mqtt_topic))
+                logger.info("[{}] mail process log tracking: {}".format(self.debug_id, log))
             else:
-                logger.info("Failed to send `%s` to topic %s",log, mqtt_topic)
+                logger.info("[{}] Failed to send `{}` to topic {}".format(self.debug_id, log, mqtt_topic))
                 raise Exception
             self.commit(consumer, payload)
             self.mqtt_msgs.remove(msg)
@@ -120,4 +123,7 @@ class MQTTClient:
         offset = payload.get("offset")
         KafkaConsumerClient.kafka_commit(
             consumer, event_topic, partition, offset
+        )
+        logger.info(
+            "[{}] kafka commit - topic: {} - partition: {} - offset: {}".format(self.debug_id, event_topic, partition, offset)
         )
