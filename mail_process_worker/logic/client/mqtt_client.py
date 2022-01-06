@@ -93,14 +93,20 @@ class MQTTClient:
             self.commit(consumer, payload)
         self.mqtt_msgs.clear()
 
-    def publish_multiple_message(self):
-        mqtt_publish.multiple(
-            msgs=self.mqtt_msgs,
-            hostname=self.broker,
-            port=self.port,
-            client_id=self.client_id,
-            auth={"username": self.username, "password": self.password},
-        )
+    def publish(self, client, consumer):
+        for msg in self.mqtt_msgs:
+            payload = msg.get("payload", {})
+            qos = msg.get("qos", 1)
+            mqtt_topic = msg.get("topic")
+            result = client.publish(mqtt_topic, payload, qos)
+            _payload = json.loads(payload)
+            log = f"{_payload.get('user')}-{_payload.get('mailbox')}-{_payload.get('uids')}"
+            status = result[0]
+            if status == 0:
+                logger.info("Send `%s` to topic `%s`", log, mqtt_topic)
+            else:
+                logger.info("Failed to send `%s` to topic %s",log, mqtt_topic)
+            self.commit(consumer, payload)
         self.mqtt_msgs.clear()
 
     def commit(self, consumer, payload):

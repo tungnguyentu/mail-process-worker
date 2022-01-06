@@ -24,13 +24,6 @@ class HandleEvent:
         return timestamp
 
     def set_priority(self, data: dict):
-        if len(self.messages) == WorkerConfig.NUMBER_OF_MESSAGE:
-            self.mqtt.ordered_message(self.user_events)
-            self.mqtt.publish_message(self.consumer.consumer)
-            self.user_events.clear()
-            self.new_event.clear()
-            self.messages.clear()
-
         self.messages.append(data)
         logger.info(f"set priority for {data['event']}")
         event_priority = {
@@ -92,7 +85,6 @@ class HandleEvent:
 
     def handle_event(self, event):
         data = event.value
-        #self.delay_event(data.get('user'), data.get("msgid"))
         if not data:
             return
         if data["event"] in [
@@ -115,31 +107,17 @@ class HandleEvent:
         if data["event"] == "MessageAppend" and data["user"] in data.get(
             "from", ""
         ):
-            return self.set_priority(data)
-        return self.set_priority(data)
-    
-    def delay_event(self, user, message_id_header):
-        if not message_id_header:
-            return
-        message_id_header = message_id_header.strip()
-        key = '{key}_{email}_{msg_id_header}'.format(
-            email=user,
-            key='DISTRIBUTED_LOCK',
-            msg_id_header=message_id_header
-        )
-        for _ in range(150):
-            if rdb.hget("lock", key):
-                logger.info("DISTRIBUTED_LOCK!!!! KEY: {}".format(key))
-                time.sleep(0.1)
-            else:
-                break
+            return data
+        return data
 
     def aggregate_event_by_amount(self):
         start = time.time()
+        mqtt = MQTTClient()
+        client = mqtt.connect_server()
         while True:
             if time.time() - start > WorkerConfig.WINDOW_DURATION:
                 self.mqtt.ordered_message(self.user_events)
-                self.mqtt.publish_message(self.consumer.consumer)
+                self.mqtt.publish(client, self.consumer.consumer)
                 self.user_events.clear()
                 self.new_event.clear()
                 self.messages.clear()
@@ -150,4 +128,11 @@ class HandleEvent:
                     continue
                 start = time.time()
                 for event in list(msg.values())[0]:
-                    self.handle_event(event)
+                    data = self.handle_event(event)
+                    if len(self.messages) == WorkerConfig.NUMBER_OF_MESSAGE:
+                        self.mqtt.ordered_message(self.user_events)
+                        self.mqtt.publish(client, self.consumer.consumer)
+                        self.user_events.clear()
+                        self.new_event.clear()
+                        self.messages.clear()
+                    self.set_priority(data)
