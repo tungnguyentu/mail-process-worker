@@ -135,4 +135,5 @@ class HandleEvent:
                         self.user_events.clear()
                         self.new_event.clear()
                         self.messages.clear()
-                    self.set_priority(data)
+                    if data:
+                        self.set_priority(data)
