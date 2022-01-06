@@ -106,7 +106,7 @@ class MQTTClient:
             log = f"{_payload.get('user')}-{_payload.get('mailbox')}-{_payload.get('uids')}"
             status = result[0]
             if status == 0:
-                logger.info("Send `%s` to topic `%s`", log, mqtt_topic)
+                logger.info("Send message: {} to topic: {}".format(payload, mqtt_topic))
             else:
                 logger.info("Failed to send `%s` to topic %s",log, mqtt_topic)
                 raise Exception
