@@ -24,7 +24,7 @@ class MQTTClient:
         self.keep_alive = MQTTConfig.MQTT_KEEPALIVE
         self.clean_session = MQTTConfig.MQTT_CLEAN_SESSION
         self.mqtt_msgs = []
-        self.debug_id = "{}_{}".format(time.time(), os.getpid())
+        self.debug_id = "{}_{}".format(int(time.time()), os.getpid())
 
     @retry(times=3, delay=1)
     @timeout(10)
