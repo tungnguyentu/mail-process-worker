@@ -111,6 +111,7 @@ class HandleEvent:
         start = time.time()
         mqtt = MQTTClient()
         client = mqtt.connect_server()
+        client.loop_start() 
         while True:
             if time.time() - start > WorkerConfig.WINDOW_DURATION:
                 self.mqtt.ordered_message(self.user_events)
