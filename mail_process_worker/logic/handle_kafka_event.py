@@ -44,7 +44,6 @@ class HandleEvent:
         if not exist_user:
             self.user_events.update({user: []})
         self.user_events[user].append((event_priority[event_name], data))
-        logger.info(f"set priority for {data['event']} | DONE")
 
     @timeout(10)
     def custom_event(self, event_name: str, data: dict):
