@@ -65,7 +65,7 @@ class MQTTClient:
             "payload": payload,
             "qos": self.qos,
         }
-        if uids > 1 or message.get("event") == "MessageMove":
+        if uids > 1 or message.get("event") in ["MessageMove", "FlagsSet", "FlagsClear"]:
             topic = self.topic.format(user, "aggregated")
             msg_format.update({"topic": topic})
         else:
