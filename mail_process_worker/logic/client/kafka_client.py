@@ -44,6 +44,3 @@ class KafkaConsumerClient:
     def kafka_commit(consumer, topic, partition, offset):
         tp = TopicPartition(topic, partition)
         consumer.commit({tp: OffsetAndMetadata(offset + 1, None)})
-        logger.info(
-            f"KAFKA COMMIT - TOPIC: {topic} - PARTITION: {partition} - OFFSET: {offset}"
-        )
