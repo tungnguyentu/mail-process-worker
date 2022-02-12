@@ -4,8 +4,7 @@ import uuid
 
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import timeout
-from mail_process_worker.logic.client.mqtt_client import MQTTClient
-from mail_process_worker.logic.client.kafka_client import KafkaConsumerClient
+from mail_process_worker.logic.client.kafka_client import KafkaConsumerClient, KafkaProducerClient
 from mail_process_worker.logic.client.redis_client import rdb
 from mail_process_worker.setting import WorkerConfig
 
@@ -15,7 +14,7 @@ class HandleEvent:
         self.user_events = {}
         self.new_event = {}
         self.messages = []
-        self.mqtt = MQTTClient()
+        self.producer = KafkaProducerClient()
         self.consumer = KafkaConsumerClient()
         self.consumer.create_consumer()
 
@@ -25,8 +24,8 @@ class HandleEvent:
 
     def set_priority(self, data: dict):
         if len(self.messages) == WorkerConfig.NUMBER_OF_MESSAGE:
-            self.mqtt.ordered_message(self.user_events)
-            self.mqtt.publish_message(self.consumer.consumer)
+            self.producer.ordered_message(self.user_events)
+            self.producer.send_message(self.consumer.consumer)
             self.user_events.clear()
             self.new_event.clear()
             self.messages.clear()
@@ -103,7 +102,6 @@ class HandleEvent:
 
         data.update(
             {
-                "id": str(uuid.uuid4()),
                 "topic": event.topic,
                 "partition": event.partition,
                 "offset": event.offset,
@@ -137,8 +135,8 @@ class HandleEvent:
         start = time.time()
         while True:
             if time.time() - start > WorkerConfig.WINDOW_DURATION:
-                self.mqtt.ordered_message(self.user_events)
-                self.mqtt.publish_message(self.consumer.consumer)
+                self.producer.ordered_message(self.user_events)
+                self.producer.send_message(self.consumer.consumer)
                 self.user_events.clear()
                 self.new_event.clear()
                 self.messages.clear()
