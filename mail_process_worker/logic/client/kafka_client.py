@@ -7,6 +7,7 @@ from mail_process_worker.setting import KafkaClientConfig
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import retry, timeout
 
+AGGREGATE = ["MessageExpunge", "FlagsSet", "FlagsClear", "MessageTrash"]
 
 class KafkaConsumerClient:
     def __init__(self) -> None:
@@ -53,10 +54,12 @@ class KafkaProducerClient:
     def __init__(self) -> None:
         self.bootstrap_servers = KafkaClientConfig.KAFKA_BROKER
         self.normal_topic = KafkaClientConfig.KAFKA_PRODUCER_NORMAL_TOPIC
-        self.aggregated_topic = KafkaClientConfig.KAFKA_PRODUCER_AGGREGATED_TOPIC
+        self.aggregated_topic = (
+            KafkaClientConfig.KAFKA_PRODUCER_AGGREGATED_TOPIC
+        )
         self.value_serializer = lambda x: json.dumps(x).encode("utf-8")
         self.kafka_msgs = []
-    
+
     def ordered_message(self, user_messages: dict):
         for user in user_messages:
             messages = user_messages[user]
@@ -68,7 +71,7 @@ class KafkaProducerClient:
         uids = len(message.get("uids", []))
         user = message.get("user")
         msg_format = {"payload": message}
-        if uids > 1 or message.get("event") == "MessageMove":
+        if uids > 1 or message.get("event") in AGGREGATE:
             topic = self.aggregated_topic
             msg_format.update({"key": user, "topic": topic})
         else:
@@ -76,24 +79,37 @@ class KafkaProducerClient:
             msg_format.update({"key": user, "topic": topic})
         self.kafka_msgs.append(msg_format)
 
-    @retry(times=3, delay=1 , logger=logger)
+    @retry(times=3, delay=1, logger=logger)
     @timeout(60)
     def send_message(self, consumer: KafkaConsumer):
         producer = KafkaProducer(
             bootstrap_servers=self.bootstrap_servers,
             value_serializer=self.value_serializer,
-            acks='all'
+            acks="all"
         )
         for msg in self.kafka_msgs:
             payload = msg.get("payload", {})
             kafka_topic = msg.get("topic")
             kafka_key = msg.get("key")
-            logger.info("Sending message: {} to topic: {}".format(payload, kafka_topic))
-            producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
-            producer.flush()
+            logger.info(
+                "Sending message: {} to topic: {}".format(payload, kafka_topic)
+            )
+            uids = payload.get("uids") or []
+            slice = KafkaClientConfig.KAFKA_SLICE_SIZE
+            while len(uids) >= slice:
+                p = uids[:slice]
+                uids = uids[slice:]
+                payload["uids"] = p
+                producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
+                producer.flush()
+            else:
+                if uids:
+                    payload["uids"] = uids                
+                    producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
+                producer.flush()
             self.commit(consumer, payload)
         self.kafka_msgs.clear()
-    
+
     def commit(self, consumer, payload):
         event_topic = payload.get("topic")
         partition = payload.get("partition")
