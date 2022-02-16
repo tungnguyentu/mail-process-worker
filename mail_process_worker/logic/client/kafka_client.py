@@ -70,8 +70,11 @@ class KafkaProducerClient:
     def create_kafka_message(self, message: dict):
         uids = len(message.get("uids", []))
         user = message.get("user")
+        username, _, domain = user.partition("@")
         msg_format = {"payload": message}
         if uids > 1 or message.get("event") in AGGREGATE:
+            if domain in KafkaClientConfig.KAFKA_IGNORE_DOMAIN:
+                return
             topic = self.aggregated_topic
             msg_format.update({"key": user, "topic": topic})
         else:
