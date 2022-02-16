@@ -82,7 +82,7 @@ class KafkaProducerClient:
         producer = KafkaProducer(
             bootstrap_servers=self.bootstrap_servers,
             value_serializer=self.value_serializer,
-            ack='all'
+            acks='all'
         )
         for msg in self.kafka_msgs:
             payload = msg.get("payload", {})
