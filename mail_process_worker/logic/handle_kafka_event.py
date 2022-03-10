@@ -1,6 +1,5 @@
 import time
 import calendar
-import uuid
 
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import timeout
@@ -51,7 +50,6 @@ class HandleEvent:
         if not exist_user:
             self.user_events.update({user: []})
         self.user_events[user].append((event_priority[event_name], data))
-        logger.info(f"set priority for {data['event']} | DONE")
 
     @timeout(10)
     def custom_event(self, event_name: str, data: dict):
@@ -92,7 +90,7 @@ class HandleEvent:
     def handle_event(self, event):
         data = event.value
         logger.info(data)
-        #self.delay_event(data.get('user'), data.get("msgid"))
+        self.delay_event(data.get('user'), data.get("msgid"))
         if data["event"] in [
             "MessageRead",
             "MailboxSubscribe",
