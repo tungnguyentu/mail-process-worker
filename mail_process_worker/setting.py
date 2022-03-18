@@ -32,6 +32,13 @@ class MQTTConfig:
     MQTT_CLEAN_SESSION = env.str("MQTT_CLEAN_SESSION")
 
 
+class KafkaAuth:
+    SASL_PLAIN_USERNAME = env.str("SASL_PLAIN_USERNAME")
+    SASL_PLAIN_PASSWORD = env.str("SASL_PLAIN_PASSWORD")
+    SECURITY_PROTOCOL = env.str("SECURITY_PROTOCOL")
+    SASL_MECHANISM = env.str("SASL_MECHANISM")
+
+
 class RedisConfig:
     REDIS_URL = env.str("REDIS_URL")
 

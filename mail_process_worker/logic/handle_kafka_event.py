@@ -89,7 +89,6 @@ class HandleEvent:
 
     def handle_event(self, event):
         data = event.value
-        logger.info(data)
         self.delay_event(data.get('user'), data.get("msgid"))
         if data["event"] in [
             "MessageRead",
