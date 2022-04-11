@@ -95,6 +95,8 @@ class KafkaProducerClient:
         if uids > 1 or message.get("event") in AGGREGATE:
             if domain in KafkaClientConfig.KAFKA_IGNORE_DOMAIN:
                 return
+            if user in KafkaClientConfig.KAFKA_IGNORE_USERS:
+                return
             topic = self.aggregated_topic
             msg_format.update({"key": user, "topic": topic})
         else:
