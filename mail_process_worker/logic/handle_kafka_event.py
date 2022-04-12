@@ -91,8 +91,7 @@ class HandleEvent:
 
     def handle_event(self, event):
         data = event.value
-        logger.info(data)
-        #self.delay_event(data.get('user'), data.get("msgid"))
+        logger.info("Event=", data)
         if data["event"] in [
             "MessageRead",
             "MailboxSubscribe",
@@ -113,6 +112,12 @@ class HandleEvent:
             "from", ""
         ):
             return self.set_priority(data)
+        if data["event"] in ["MessageAppend", "MessageExpunge"]:
+            try:
+                self.custom_event("MessageMove", data)
+                return
+            except Exception:
+                return
         return self.set_priority(data)
 
     def delay_event(self, user, message_id_header):

@@ -7,7 +7,7 @@ from mail_process_worker.setting import KafkaClientConfig
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import retry, timeout
 
-AGGREGATE = ["MessageExpunge", "FlagsSet", "FlagsClear", "MessageTrash"]
+AGGREGATE = ["MessageExpunge", "FlagsSet", "FlagsClear", "MessageTrash", "MessageAppend"]
 
 class KafkaConsumerClient:
     def __init__(self) -> None:
