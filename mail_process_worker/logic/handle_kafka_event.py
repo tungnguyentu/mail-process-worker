@@ -39,7 +39,7 @@ class HandleEvent:
             "MessageAppend": 4,
             "FlagsSet": 5,
             "FlagsClear": 5,
-            "MessageExpunge": 6,
+            "MessageMove": 6,
             "MessageTrash": 7,
             "MailboxDelete": 8,
         }
@@ -91,7 +91,6 @@ class HandleEvent:
 
     def handle_event(self, event):
         data = event.value
-        logger.info("Event=", data)
         if data["event"] in [
             "MessageRead",
             "MailboxSubscribe",
@@ -116,7 +115,8 @@ class HandleEvent:
             try:
                 self.custom_event("MessageMove", data)
                 return
-            except Exception:
+            except Exception as e:
+                logger.info("Create Message Move Error: {}".format(e))
                 return
         return self.set_priority(data)
 
