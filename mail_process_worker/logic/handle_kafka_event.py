@@ -1,6 +1,5 @@
 import time
 import calendar
-import uuid
 
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import timeout
@@ -52,40 +51,40 @@ class HandleEvent:
         self.user_events[user].append((event_priority[event_name], data))
 
     @timeout(10)
-    def custom_event(self, event_name: str, data: dict):
-        if event_name == "MessageMove":
-            user = data["user"]
-            if data["event"] == "MessageAppend":
-                exist_user = self.new_event.get(user, None)
-                if not exist_user:
-                    self.new_event.update(
-                        {
-                            user: {
-                                "new_uids": [],
-                            }
+    def custom_event(self, data: dict):
+        user = data["user"]
+        if data["event"] == "MessageAppend":
+            exist_user = self.new_event.get(user, None)
+            if not exist_user:
+                self.new_event.update(
+                    {
+                        user: {
+                            "new_uids": [],
                         }
-                    )
-                self.new_event[user]["new_uids"].append(data["uids"][0])
-                self.new_event[user].update(
-                    {
-                        "event": event_name,
-                        "event_timestamp": self.get_current_timestamp(),
-                        "user": user,
-                        "new_mailbox": data["mailbox"],
                     }
                 )
-            elif data["event"] == "MessageExpunge":
-                self.new_event[user].update(
-                    {
-                        "old_uids": data["uids"],
-                        "old_mailbox": data["mailbox"],
-                        "offset": data["offset"],
-                        "topic": data["topic"],
-                        "partition": data["partition"],
-                    }
-                )
-                self.set_priority(self.new_event[user])
-            return None
+            self.new_event[user]["new_uids"].append(data["uid"])
+            self.new_event[user].update(
+                {
+                    "event": "MessageMove",
+                    "event_timestamp": self.get_current_timestamp(),
+                    "user": user,
+                    "new_mailbox": data["mailbox"],
+                }
+            )
+        elif data["event"] == "MessageExpunge":
+            self.new_event[user].update(
+                {
+                    "old_uids": [],
+                    "old_mailbox": data["mailbox"],
+                    "offset": data["offset"],
+                    "topic": data["topic"],
+                    "partition": data["partition"],
+                }
+            )
+            self.new_event[user]["old_uids"].append(data["uid"])
+            self.set_priority(self.new_event[user])
+        return None
 
     def handle_event(self, event):
         data = event.value
@@ -111,11 +110,11 @@ class HandleEvent:
             return self.set_priority(data)
         if data["event"] in ["MessageAppend", "MessageExpunge"]:
             try:
-                self.custom_event("MessageMove", data)
-                return
+                self.custom_event(data)
             except Exception as e:
                 logger.info("Create Message Move Error: {}".format(e))
-                return
+                raise e
+            return
         return self.set_priority(data)
 
     def delay_event(self, user, message_id_header):

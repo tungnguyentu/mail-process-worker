@@ -7,7 +7,6 @@ from mail_process_worker.setting import KafkaClientConfig
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import retry, timeout
 
-AGGREGATE = ["MessageExpunge", "FlagsSet", "FlagsClear", "MessageTrash", "MessageAppend"]
 
 class KafkaConsumerClient:
     def __init__(self) -> None:
@@ -68,11 +67,10 @@ class KafkaProducerClient:
                 self.create_kafka_message(message)
 
     def create_kafka_message(self, message: dict):
-        uids = len(message.get("uids", []))
         user = message.get("user")
-        username, _, domain = user.partition("@")
+        _, _, domain = user.partition("@")
         msg_format = {"payload": message}
-        if uids > 1 or message.get("event") in AGGREGATE:
+        if  message.get("event") in KafkaClientConfig.KAFKA_EVENT_AGGREGATE:
             if domain in KafkaClientConfig.KAFKA_IGNORE_DOMAIN:
                 return
             topic = self.aggregated_topic
@@ -94,21 +92,12 @@ class KafkaProducerClient:
             payload = msg.get("payload", {})
             kafka_topic = msg.get("topic")
             kafka_key = msg.get("key")
-            logger.info(
-                "Sending message: {} to topic: {}".format(payload, kafka_topic)
-            )
-            uids = payload.get("uids") or []
-            slice = KafkaClientConfig.KAFKA_SLICE_SIZE
-            while len(uids) >= slice:
-                p = uids[:slice]
-                uids = uids[slice:]
-                payload["uids"] = p
+            uid = payload.get("uid") or []
+            if uid:
+                logger.info(
+                    "Sending message: {} to topic: {}".format(payload, kafka_topic)
+                )
                 producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
-                producer.flush()
-            else:
-                if uids:
-                    payload["uids"] = uids                
-                    producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
                 producer.flush()
             self.commit(consumer, payload)
         self.kafka_msgs.clear()
@@ -120,5 +109,5 @@ class KafkaProducerClient:
         tp = TopicPartition(event_topic, partition)
         consumer.commit({tp: OffsetAndMetadata(offset + 1, None)})
         logger.info(
-            f"KAFKA COMMIT - TOPIC: {event_topic} - PARTITION: {partition} - OFFSET: {offset}"
+            f"Kafka commit - topic: {event_topic} - partition: {partition} - offset: {offset}"
         )
