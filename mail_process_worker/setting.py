@@ -20,18 +20,6 @@ class KafkaClientConfig:
     KAFKA_IGNORE_DOMAIN = env.list("KAFKA_IGNORE_DOMAIN")
 
 
-class MQTTConfig:
-    CLIENT_ID = os.environ.get("CLIENT_ID")
-    MQTT_BROKER = env.str("MQTT_BROKER")
-    MQTT_PORT = env.int("MQTT_PORT")
-    MQTT_USERNAME = env.str("MQTT_USERNAME")
-    MQTT_PASSWORD = env.str("MQTT_PASSWORD")
-    MQTT_TOPIC = env.str("MQTT_TOPIC")
-    MQTT_QoS = env.int("MQTT_QoS")
-    MQTT_KEEPALIVE = env.int("MQTT_KEEPALIVE")
-    MQTT_CLEAN_SESSION = env.str("MQTT_CLEAN_SESSION")
-
-
 class RedisConfig:
     REDIS_URL = env.str("REDIS_URL")
 

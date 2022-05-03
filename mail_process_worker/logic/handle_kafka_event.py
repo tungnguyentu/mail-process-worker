@@ -31,7 +31,6 @@ class HandleEvent:
             self.messages.clear()
 
         self.messages.append(data)
-        logger.info(f"set priority for {data['event']}")
         event_priority = {
             "MailboxCreate": 1,
             "MailboxRename": 2,
@@ -51,7 +50,6 @@ class HandleEvent:
         if not exist_user:
             self.user_events.update({user: []})
         self.user_events[user].append((event_priority[event_name], data))
-        logger.info(f"set priority for {data['event']} | DONE")
 
     @timeout(10)
     def custom_event(self, event_name: str, data: dict):
@@ -106,7 +104,7 @@ class HandleEvent:
             }
         )
 
-        logger.info(f"New event ==> {data['event']}")
+        logger.info(f"Received: {data}")
         if data["event"] == "MessageAppend" and data["user"] in data.get(
             "from", ""
         ):
