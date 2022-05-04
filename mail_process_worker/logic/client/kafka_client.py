@@ -92,13 +92,11 @@ class KafkaProducerClient:
             payload = msg.get("payload", {})
             kafka_topic = msg.get("topic")
             kafka_key = msg.get("key")
-            uid = payload.get("uid") or []
-            if uid:
-                logger.info(
-                    "Sending message: {} to topic: {}".format(payload, kafka_topic)
-                )
-                producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
-                producer.flush()
+            logger.info(
+                "Sending message: {} to topic: {}".format(payload, kafka_topic)
+            )
+            producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
+            producer.flush()
             self.commit(consumer, payload)
         self.kafka_msgs.clear()
 
