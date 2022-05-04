@@ -37,7 +37,7 @@ class HandleEvent:
             "MessageAppend": 4,
             "FlagsSet": 5,
             "FlagsClear": 5,
-            "MessageMove": 6,
+            "MessageExpunge": 6,
             "MessageTrash": 7,
             "MailboxDelete": 8,
         }
@@ -108,13 +108,6 @@ class HandleEvent:
             "from", ""
         ):
             return self.set_priority(data)
-        if data["event"] in ["MessageAppend", "MessageExpunge"]:
-            try:
-                self.custom_event(data)
-            except Exception as e:
-                logger.info("Create Message Move Error: {}".format(e))
-                raise e
-            return
         return self.set_priority(data)
 
     def delay_event(self, user, message_id_header):
