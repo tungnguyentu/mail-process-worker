@@ -92,13 +92,34 @@ class KafkaProducerClient:
             payload = msg.get("payload", {})
             kafka_topic = msg.get("topic")
             kafka_key = msg.get("key")
-            logger.info(
-                "Sending message: {} to topic: {}".format(payload, kafka_topic)
-            )
-            producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
-            producer.flush()
+            uids = payload.get("uids")
+            if uids:
+                self.split_event(payload, kafka_topic, kafka_key, producer)
+            else:
+                logger.info(
+                    "Sending message: {} to topic: {}".format(payload, kafka_topic)
+                )
+                producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
+                producer.flush()
             self.commit(consumer, payload)
         self.kafka_msgs.clear()
+    
+    def split_event(payload: dict, kafka_topic: str, kafka_key: str, producer: KafkaProducer):
+        slice = KafkaClientConfig.KAFKA_SLICE_SIZE
+        logger.info(
+            "Sending message: {} to topic: {}".format(payload, kafka_topic)
+        )
+        while len(uids) >= slice:
+            p = uids[:slice]
+            uids = uids[slice:]
+            payload["uids"] = p
+            producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
+            producer.flush()
+        else:
+            if uids:
+                payload["uids"] = uids                
+                producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
+                producer.flush()
 
     def commit(self, consumer, payload):
         event_topic = payload.get("topic")
