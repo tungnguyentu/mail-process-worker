@@ -94,7 +94,7 @@ class KafkaProducerClient:
             kafka_key = msg.get("key")
             uids = payload.get("uids")
             if uids:
-                self.split_event(payload, kafka_topic, kafka_key, producer)
+                self.split_event(payload, uids, kafka_topic, kafka_key, producer)
             else:
                 logger.info(
                     "Sending message: {} to topic: {}".format(payload, kafka_topic)
@@ -104,7 +104,7 @@ class KafkaProducerClient:
             self.commit(consumer, payload)
         self.kafka_msgs.clear()
     
-    def split_event(payload: dict, kafka_topic: str, kafka_key: str, producer: KafkaProducer):
+    def split_event(self, payload: dict, uids: list, kafka_topic: str, kafka_key: str, producer: KafkaProducer):
         slice = KafkaClientConfig.KAFKA_SLICE_SIZE
         logger.info(
             "Sending message: {} to topic: {}".format(payload, kafka_topic)
