@@ -96,6 +96,9 @@ class KafkaProducerClient:
             if uids:
                 self.split_event(payload, uids, kafka_topic, kafka_key, producer)
             else:
+                uids = [payload.get("uid")]
+                payload.pop("uid")
+                payload["uids"] = uids
                 logger.info(
                     "Sending message: {} to topic: {}".format(payload, kafka_topic)
                 )
