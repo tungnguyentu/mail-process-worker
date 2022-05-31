@@ -30,7 +30,6 @@ class HandleEvent:
             self.messages.clear()
 
         self.messages.append(data)
-        logger.info(f"set priority for {data['event']}")
         event_priority = {
             "MailboxCreate": 1,
             "MailboxRename": 2,
@@ -89,7 +88,6 @@ class HandleEvent:
 
     def handle_event(self, event):
         data = event.value
-        self.delay_event(data.get('user'), data.get("msgid"))
         if data["event"] in [
             "MessageRead",
             "MailboxSubscribe",

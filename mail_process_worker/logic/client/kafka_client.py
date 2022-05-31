@@ -8,7 +8,7 @@ from mail_process_worker.setting import KafkaClientConfig, KafkaAuth
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import retry, timeout
 
-AGGREGATE = ["MessageExpunge", "FlagsSet", "FlagsClear", "MessageTrash"]
+AGGREGATE = ["MessageAppend", "MessageExpunge", "FlagsSet", "FlagsClear", "MessageTrash"]
 
 context = ssl.create_default_context()
 context.options &= ssl.OP_NO_TLSv1
