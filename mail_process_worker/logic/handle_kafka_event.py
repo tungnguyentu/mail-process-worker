@@ -141,5 +141,7 @@ class HandleEvent:
                 if not msg:
                     continue
                 start = time.time()
-                for event in list(msg.values())[0]:
-                    self.handle_event(event)
+                logger.info("MESSAGE: {}".format(msg))
+                for _, events in msg.items():
+                    for event in events:
+                        self.handle_event(event)
