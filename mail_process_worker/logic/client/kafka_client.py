@@ -72,6 +72,7 @@ class KafkaProducerClient:
         self.aggregated_topic = (
             KafkaClientConfig.KAFKA_PRODUCER_AGGREGATED_TOPIC
         )
+        self.topic_for_transfer = KafkaClientConfig.KAFKA_PRODUCER_TRANSFER_TOPIC
         self.value_serializer = lambda x: json.dumps(x).encode("utf-8")
         self.kafka_msgs = []
         self.sasl_plain_username = KafkaAuth.SASL_PLAIN_USERNAME
@@ -100,6 +101,8 @@ class KafkaProducerClient:
         else:
             topic = self.normal_topic
             msg_format.update({"key": user, "topic": topic})
+        if user in KafkaClientConfig.KAFKA_EMAIL_TRANSFER:
+            topic = self.topic_for_transfer
         self.kafka_msgs.append(msg_format)
 
     @retry(times=3, delay=1, logger=logger)
