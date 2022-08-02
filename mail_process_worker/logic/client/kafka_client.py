@@ -93,7 +93,9 @@ class KafkaProducerClient:
         user = message.get("user")
         username, _, domain = user.partition("@")
         msg_format = {"payload": message}
-        if uids > 1 or message.get("event") in AGGREGATE:
+        if user in KafkaClientConfig.KAFKA_EMAIL_TRANSFER:
+            topic = self.topic_for_transfer
+        elif uids > 1 or message.get("event") in AGGREGATE:
             if domain in KafkaClientConfig.KAFKA_IGNORE_DOMAIN:
                 return
             topic = self.aggregated_topic
@@ -101,8 +103,6 @@ class KafkaProducerClient:
         else:
             topic = self.normal_topic
             msg_format.update({"key": user, "topic": topic})
-        if user in KafkaClientConfig.KAFKA_EMAIL_TRANSFER:
-            topic = self.topic_for_transfer
         self.kafka_msgs.append(msg_format)
 
     @retry(times=3, delay=1, logger=logger)
