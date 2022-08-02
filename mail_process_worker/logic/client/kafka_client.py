@@ -123,9 +123,7 @@ class KafkaProducerClient:
             payload = msg.get("payload", {})
             kafka_topic = msg.get("topic")
             kafka_key = msg.get("key")
-            logger.info(
-                "Sending message: {} to topic: {}".format(payload, kafka_topic)
-            )
+            logger.info("Sending message: {} to topic: {}".format(payload, kafka_topic))
             uids = payload.get("uids") or []
             slice = KafkaClientConfig.KAFKA_SLICE_SIZE
             while len(uids) >= slice:

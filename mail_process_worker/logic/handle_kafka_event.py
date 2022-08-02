@@ -90,7 +90,7 @@ class HandleEvent:
         data = event.value
         user = data.get("user", None)
         if user not in KafkaClientConfig.KAFKA_EMAIL_TRANSFER:
-            return
+            return self.consumer.kafka_commit(self.consumer.consumer, data["topic"], data["partition"], data["offset"])
         if data["event"] in [
             "MessageRead",
             "MailboxSubscribe",
