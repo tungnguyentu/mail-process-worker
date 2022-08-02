@@ -95,6 +95,7 @@ class KafkaProducerClient:
         msg_format = {"payload": message}
         if user in KafkaClientConfig.KAFKA_EMAIL_TRANSFER:
             topic = self.topic_for_transfer
+            msg_format.update({"key": user, "topic": topic})
         elif uids > 1 or message.get("event") in AGGREGATE:
             if domain in KafkaClientConfig.KAFKA_IGNORE_DOMAIN:
                 return
