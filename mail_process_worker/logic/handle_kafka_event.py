@@ -5,7 +5,7 @@ from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import timeout
 from mail_process_worker.logic.client.kafka_client import KafkaConsumerClient, KafkaProducerClient
 from mail_process_worker.logic.client.redis_client import rdb
-from mail_process_worker.setting import WorkerConfig
+from mail_process_worker.setting import KafkaClientConfig, WorkerConfig
 
 
 class HandleEvent:
@@ -88,6 +88,9 @@ class HandleEvent:
 
     def handle_event(self, event):
         data = event.value
+        user = data.get("user", None)
+        if user not in KafkaClientConfig.KAFKA_EMAIL_TRANSFER:
+            return
         if data["event"] in [
             "MessageRead",
             "MailboxSubscribe",
