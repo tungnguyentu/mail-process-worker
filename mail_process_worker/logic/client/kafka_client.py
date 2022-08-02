@@ -69,6 +69,7 @@ class KafkaProducerClient:
     def __init__(self) -> None:
         self.bootstrap_servers = KafkaClientConfig.KAFKA_BROKER
         self.normal_topic = KafkaClientConfig.KAFKA_PRODUCER_NORMAL_TOPIC
+        self.special_user_topic = KafkaClientConfig.KAFKA_PRODUCER_TRANSFER_TOPIC
         self.aggregated_topic = (
             KafkaClientConfig.KAFKA_PRODUCER_AGGREGATED_TOPIC
         )
@@ -92,7 +93,12 @@ class KafkaProducerClient:
         user = message.get("user")
         username, _, domain = user.partition("@")
         msg_format = {"payload": message}
-        if uids > 1 or message.get("event") in AGGREGATE:
+        if domain in KafkaClientConfig.KAFKA_DOMAIN_TRANSFER:
+            topic = self.special_user_topic
+            if message.get("event") == "MessageNew":
+                topic = self.normal_topic
+            msg_format.update({"key": user, "topic": topic})
+        elif uids > 1 or message.get("event") in AGGREGATE:
             if domain in KafkaClientConfig.KAFKA_IGNORE_DOMAIN:
                 return
             topic = self.aggregated_topic
