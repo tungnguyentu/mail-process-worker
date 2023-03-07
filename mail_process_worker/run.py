@@ -1,4 +1,7 @@
 from mail_process_worker.logic.handle_kafka_event import HandleEvent
+import sentry_sdk
+from mail_process_worker.setting import SentryConfig
+sentry_sdk.init(SentryConfig.SENTRY_DSN)
 
 
 def main():

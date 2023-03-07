@@ -2,7 +2,7 @@ import json
 
 from kafka import KafkaConsumer, KafkaProducer
 from kafka.structs import TopicPartition, OffsetAndMetadata
-
+from datetime import datetime, timezone
 from mail_process_worker.setting import KafkaClientConfig
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import retry, timeout
@@ -99,14 +99,20 @@ class KafkaProducerClient:
                 uids = [payload.get("uid")]
                 payload.pop("uid")
                 payload["uids"] = uids
+                issued_at = datetime.now(tz=timezone.utc)
+                data = {
+                    "issued_at": issued_at,
+                    "payload": payload,
+                    "event_type": msg.get("event")
+                }
                 logger.info(
-                    "Sending message: {} to topic: {}".format(payload, kafka_topic)
+                    "Sending message: {} to topic: {}".format(data, kafka_topic)
                 )
-                producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
+                producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=data)
                 producer.flush()
-            self.commit(consumer, payload)
+            self.commit(consumer, data)
         self.kafka_msgs.clear()
-    
+
     def split_event(self, payload: dict, uids: list, kafka_topic: str, kafka_key: str, producer: KafkaProducer):
         slice = KafkaClientConfig.KAFKA_SLICE_SIZE
         logger.info(
@@ -120,11 +126,12 @@ class KafkaProducerClient:
             producer.flush()
         else:
             if uids:
-                payload["uids"] = uids                
+                payload["uids"] = uids
                 producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
                 producer.flush()
 
-    def commit(self, consumer, payload):
+    def commit(self, consumer, data):
+        payload = data.get('payload')
         event_topic = payload.get("topic")
         partition = payload.get("partition")
         offset = payload.get("offset")
