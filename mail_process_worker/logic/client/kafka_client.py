@@ -22,8 +22,7 @@ class KafkaConsumerClient:
         self.max_poll_records = KafkaClientConfig.KAFKA_MAX_POLL_RECORDS
         self.poll_timeout = KafkaClientConfig.KAFKA_POLL_TIMEOUT
 
-    @retry(times=3, delay=1)
-    @timeout(10)
+    @retry(times=4, delay=1)
     def create_consumer(self):
         logger.info(self.bootstrap_servers)
         self.consumer = KafkaConsumer(
@@ -70,9 +69,11 @@ class KafkaProducerClient:
         user = message.get("user")
         _, _, domain = user.partition("@")
         msg_format = {"payload": message}
+        if user in KafkaClientConfig.KAFKA_IGNORE_USERS:
+            return
+        if domain in KafkaClientConfig.KAFKA_IGNORE_DOMAIN:
+            return
         if  message.get("event") in KafkaClientConfig.KAFKA_EVENT_AGGREGATE:
-            if domain in KafkaClientConfig.KAFKA_IGNORE_DOMAIN:
-                return
             topic = self.aggregated_topic
             msg_format.update({"key": user, "topic": topic})
         else:
@@ -80,8 +81,7 @@ class KafkaProducerClient:
             msg_format.update({"key": user, "topic": topic})
         self.kafka_msgs.append(msg_format)
 
-    @retry(times=3, delay=1, logger=logger)
-    @timeout(60)
+    @retry(times=4, delay=1, logger=logger)
     def send_message(self, consumer: KafkaConsumer):
         producer = KafkaProducer(
             bootstrap_servers=self.bootstrap_servers,
@@ -107,7 +107,7 @@ class KafkaProducerClient:
                 producer.flush()
             self.commit(consumer, payload)
         self.kafka_msgs.clear()
-    
+
     def split_event(self, payload: dict, uids: list, kafka_topic: str, kafka_key: str, producer: KafkaProducer):
         slice = KafkaClientConfig.KAFKA_SLICE_SIZE
         logger.info(
@@ -121,7 +121,7 @@ class KafkaProducerClient:
             producer.flush()
         else:
             if uids:
-                payload["uids"] = uids                
+                payload["uids"] = uids
                 producer.send(kafka_topic, key=bytes(kafka_key, "utf-8"), value=payload)
                 producer.flush()
 
