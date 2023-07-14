@@ -1,12 +1,17 @@
 import json
+import ssl
 
 from kafka import KafkaConsumer, KafkaProducer
 from kafka.structs import TopicPartition, OffsetAndMetadata
 
-from mail_process_worker.setting import KafkaClientConfig
+from mail_process_worker.setting import KafkaClientConfig, KafkaAuth
 from mail_process_worker.utils.logger import logger
 from mail_process_worker.utils.decorator import retry, timeout
 
+
+context = ssl.create_default_context()
+context.options &= ssl.OP_NO_TLSv1
+context.options &= ssl.OP_NO_TLSv1_1
 
 class KafkaConsumerClient:
     def __init__(self) -> None:
@@ -21,6 +26,11 @@ class KafkaConsumerClient:
         self.enable_auto_commit = KafkaClientConfig.KAFKA_ENABLE_AUTO_COMMIT
         self.max_poll_records = KafkaClientConfig.KAFKA_MAX_POLL_RECORDS
         self.poll_timeout = KafkaClientConfig.KAFKA_POLL_TIMEOUT
+        self.sasl_plain_username = KafkaAuth.SASL_PLAIN_USERNAME
+        self.sasl_plain_password = KafkaAuth.SASL_PLAIN_PASSWORD
+        self.security_protocol = KafkaAuth.SECURITY_PROTOCOL
+        self.sasl_mechanism = KafkaAuth.SASL_MECHANISM
+        self.ssl_context = context
 
     @retry(times=4, delay=1)
     def create_consumer(self):
@@ -33,6 +43,11 @@ class KafkaConsumerClient:
             value_deserializer=self.value_deserializer,
             enable_auto_commit=self.enable_auto_commit,
             max_poll_records=self.max_poll_records,
+            sasl_plain_username=self.sasl_plain_username,
+            sasl_plain_password=self.sasl_plain_password,
+            security_protocol=self.security_protocol,
+            ssl_context=self.ssl_context,
+            sasl_mechanism=self.sasl_mechanism
         )
 
     def poll_message(self):
@@ -57,6 +72,11 @@ class KafkaProducerClient:
         )
         self.value_serializer = lambda x: json.dumps(x).encode("utf-8")
         self.kafka_msgs = []
+        self.sasl_plain_username = KafkaAuth.SASL_PLAIN_USERNAME
+        self.sasl_plain_password = KafkaAuth.SASL_PLAIN_PASSWORD
+        self.security_protocol = KafkaAuth.SECURITY_PROTOCOL
+        self.sasl_mechanism = KafkaAuth.SASL_MECHANISM
+        self.ssl_context = context
 
     def ordered_message(self, user_messages: dict):
         for user in user_messages:
@@ -86,7 +106,12 @@ class KafkaProducerClient:
         producer = KafkaProducer(
             bootstrap_servers=self.bootstrap_servers,
             value_serializer=self.value_serializer,
-            acks="all"
+            acks="all",
+            sasl_plain_username=self.sasl_plain_username,
+            sasl_plain_password=self.sasl_plain_password,
+            security_protocol=self.security_protocol,
+            ssl_context=self.ssl_context,
+            sasl_mechanism=self.sasl_mechanism
         )
         for msg in self.kafka_msgs:
             payload = msg.get("payload", {})
